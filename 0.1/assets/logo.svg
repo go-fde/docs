@@ -1,0 +1,16 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="go-fde">
+  <defs>
+    <linearGradient id="gocyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22CCE2"/>
+      <stop offset="1" stop-color="#0079A8"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#gocyan)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 56L180 76V120C180 156 158 184 128 196C98 184 76 156 76 120V76Z" stroke-width="11"/>
+    <ellipse cx="128" cy="94" rx="28" ry="9" stroke-width="11"/>
+    <path d="M100 94V140A28 9 0 0 0 156 140V94" stroke-width="11"/>
+    <circle cx="128" cy="121" r="6" stroke-width="9"/>
+    <path d="M128 127v8" stroke-width="9"/>
+  </g>
+</svg>
