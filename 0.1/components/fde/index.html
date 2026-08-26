@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -907,36 +907,36 @@ auto-detect the format from the on-disk header.</p>
 </ul>
 <h2 id="usage">Usage</h2>
 <h3 id="open-an-existing-device-explicit-type">Open an existing device (explicit type)</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">&quot;github.com/go-fde/fde&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">"github.com/go-fde/fde"</span>
 
 <span class="c1">// LUKS</span>
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">LUKS</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/dev/sdb&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">LUKS</span><span class="p">,</span><span class="w"> </span><span class="s">"/dev/sdb"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 
 <span class="c1">// APFS</span>
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">APFS</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/dev/disk2s2&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">APFS</span><span class="p">,</span><span class="w"> </span><span class="s">"/dev/disk2s2"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 
 <span class="c1">// Plaintext</span>
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">CLEAR</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/path/to/disk.raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">CLEAR</span><span class="p">,</span><span class="w"> </span><span class="s">"/path/to/disk.raw"</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="open-with-auto-detection">Open with auto-detection</h3>
-<div class="highlight"><pre><span></span><code><span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">Auto</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/path/to/disk&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">Auto</span><span class="p">,</span><span class="w"> </span><span class="s">"/path/to/disk"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="k">defer</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
 <span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">)</span>
-<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="detect-format-without-opening">Detect format without opening</h3>
-<div class="highlight"><pre><span></span><code><span class="nx">kind</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Detect</span><span class="p">(</span><span class="s">&quot;/path/to/disk&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="nx">kind</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Detect</span><span class="p">(</span><span class="s">"/path/to/disk"</span><span class="p">)</span>
 <span class="k">switch</span><span class="w"> </span><span class="nx">kind</span><span class="w"> </span><span class="p">{</span>
 <span class="k">case</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">LUKS</span><span class="p">:</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;LUKS container&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"LUKS container"</span><span class="p">)</span>
 <span class="k">case</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">APFS</span><span class="p">:</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;APFS FileVault 2 container&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"APFS FileVault 2 container"</span><span class="p">)</span>
 <span class="k">case</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">CLEAR</span><span class="p">:</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;plaintext device&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"plaintext device"</span><span class="p">)</span>
 <span class="p">}</span>
 </code></pre></div>
 <h3 id="layer-on-top-of-another-block-device-eg-qcow2">Layer on top of another block device (e.g. QCOW2)</h3>
@@ -948,15 +948,15 @@ auto-detect the format from the on-disk header.</p>
 <span class="p">}</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;github.com/go-fde/fde&quot;</span>
-<span class="w">    </span><span class="nx">qcow2</span><span class="w"> </span><span class="s">&quot;github.com/go-diskimages/qcow2&quot;</span>
+<span class="w">    </span><span class="s">"github.com/go-fde/fde"</span>
+<span class="w">    </span><span class="nx">qcow2</span><span class="w"> </span><span class="s">"github.com/go-diskimages/qcow2"</span>
 <span class="p">)</span>
 
-<span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">qcow2</span><span class="p">.</span><span class="nx">OpenDevice</span><span class="p">(</span><span class="s">&quot;disk.qcow2&quot;</span><span class="p">)</span>
+<span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">qcow2</span><span class="p">.</span><span class="nx">OpenDevice</span><span class="p">(</span><span class="s">"disk.qcow2"</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Auto-detect: the QCOW2 virtual disk may hold LUKS, APFS, or raw data.</span>
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">OpenFrom</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">Auto</span><span class="p">,</span><span class="w"> </span><span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">OpenFrom</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">Auto</span><span class="p">,</span><span class="w"> </span><span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">qdev</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 <span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
@@ -968,10 +968,10 @@ auto-detect the format from the on-disk header.</p>
 and return an opened <code>Device</code> ready for payload I/O. The passphrase is ignored
 for <code>CLEAR</code> (no header is written).</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Create a new LUKS1 container on a pre-allocated file.</span>
-<span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="s">&quot;disk.luks&quot;</span><span class="p">)</span>
+<span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="s">"disk.luks"</span><span class="p">)</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">LUKS</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;disk.luks&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">LUKS</span><span class="p">,</span><span class="w"> </span><span class="s">"disk.luks"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="k">defer</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
@@ -1154,7 +1154,7 @@ for <code>CLEAR</code> (no header is written).</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -916,10 +916,10 @@ supported feature set.</p>
 </tbody>
 </table>
 <h2 id="usage">Usage</h2>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">&quot;github.com/go-fde/luks&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">"github.com/go-fde/luks"</span>
 
 <span class="c1">// Open and unlock a LUKS container.</span>
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">&quot;/dev/sdb&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;my passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">"/dev/sdb"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"my passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
 <span class="p">}</span>
@@ -930,10 +930,10 @@ supported feature set.</p>
 <span class="nx">n</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 
 <span class="c1">// Write to the payload (encrypt-on-write).</span>
-<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">WriteAt</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">WriteAt</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"hello"</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 
 <span class="c1">// Check whether a file looks like a LUKS container.</span>
-<span class="nx">ok</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Detect</span><span class="p">(</span><span class="s">&quot;/path/to/disk.img&quot;</span><span class="p">)</span>
+<span class="nx">ok</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Detect</span><span class="p">(</span><span class="s">"/path/to/disk.img"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="create-a-new-luks1-container">Create a new LUKS1 container</h3>
 <p><code>Format</code> and <code>FormatOn</code> initialise a fresh LUKS1 header on an existing file or
@@ -978,10 +978,10 @@ block device, derive an encryption key from the passphrase, and return an open
 </tbody>
 </table>
 <div class="highlight"><pre><span></span><code><span class="c1">// The file must exist before calling Format.</span>
-<span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="s">&quot;disk.luks&quot;</span><span class="p">)</span>
+<span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="s">"disk.luks"</span><span class="p">)</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
-<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Format</span><span class="p">(</span><span class="s">&quot;disk.luks&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Format</span><span class="p">(</span><span class="s">"disk.luks"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="k">defer</span><span class="w"> </span><span class="nx">dev</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
@@ -1019,17 +1019,17 @@ as QCOW2. The caller passes any value satisfying:</p>
 device.</p>
 <h3 id="example-luks-over-qcow2">Example: LUKS over QCOW2</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="nx">luks</span><span class="w">        </span><span class="s">&quot;github.com/go-fde/luks&quot;</span>
-<span class="w">    </span><span class="nx">image_qcow2</span><span class="w"> </span><span class="s">&quot;github.com/go-diskimages/qcow2&quot;</span>
+<span class="w">    </span><span class="nx">luks</span><span class="w">        </span><span class="s">"github.com/go-fde/luks"</span>
+<span class="w">    </span><span class="nx">image_qcow2</span><span class="w"> </span><span class="s">"github.com/go-diskimages/qcow2"</span>
 <span class="p">)</span>
 
 <span class="c1">// 1. Open the QCOW2 container.</span>
-<span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">image_qcow2</span><span class="p">.</span><span class="nx">OpenDevice</span><span class="p">(</span><span class="s">&quot;disk.qcow2&quot;</span><span class="p">)</span>
+<span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">image_qcow2</span><span class="p">.</span><span class="nx">OpenDevice</span><span class="p">(</span><span class="s">"disk.qcow2"</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// 2. Unlock the LUKS container embedded in the QCOW2 virtual disk.</span>
 <span class="c1">//    ldev.Close() will also close qdev.</span>
-<span class="nx">ldev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">OpenFrom</span><span class="p">(</span><span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;passphrase&quot;</span><span class="p">))</span>
+<span class="nx">ldev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">OpenFrom</span><span class="p">(</span><span class="nx">qdev</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">qdev</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 <span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
@@ -1038,7 +1038,7 @@ device.</p>
 
 <span class="c1">// 3. Read/write the plaintext payload.</span>
 <span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">512</span><span class="p">)</span>
-<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">ldev</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ldev</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1098,7 +1098,7 @@ device.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
