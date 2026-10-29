@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -513,6 +513,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reading-a-filevault-volume-unlockvolumekey-and-sectorcipher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading a FileVault volume: UnlockVolumeKey and SectorCipher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#apple-shape-encrypted-container-support" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -714,6 +725,17 @@
     <span class="md-ellipsis">
       
         Supported features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-a-filevault-volume-unlockvolumekey-and-sectorcipher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading a FileVault volume: UnlockVolumeKey and SectorCipher
       
     </span>
   </a>
@@ -959,8 +981,48 @@ on the <code>nx_flags &amp; NX_CRYPTO_SW</code> bit through the same <code>apfs.
 <td>Encrypted metadata (APFS snapshots, etc.)</td>
 <td>❌ (payload encryption only)</td>
 </tr>
+<tr>
+<td>Volume key without a Device (<code>UnlockVolumeKey</code>, <code>SectorCipher</code>)</td>
+<td>✅ (v0.2.0)</td>
+</tr>
+<tr>
+<td>Bounded unlock of untrusted images (<code>Limits</code>, <code>ErrLimit</code>, <code>ErrWrongPassphrase</code>)</td>
+<td>✅</td>
+</tr>
 </tbody>
 </table>
+<h2 id="reading-a-filevault-volume-unlockvolumekey-and-sectorcipher">Reading a FileVault volume: <code>UnlockVolumeKey</code> and <code>SectorCipher</code></h2>
+<p>A <code>Device</code> decrypts <strong>every</strong> byte it reads. On a real FileVault container,
+the container metadata is plaintext: the superblock, checkpoints, object maps
+and volume superblock. Only two kinds of data are encrypted with the VEK
+(Apple File System Reference, "Encryption"):</p>
+<ul>
+<li>file-system tree nodes whose object-map entry has <code>OMAP_VAL_ENCRYPTED</code>;</li>
+<li>file extents, using <code>crypto_id</code> as the tweak base.</li>
+</ul>
+<p>A file-system reader therefore takes the key and a cipher it can point at
+single blocks:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">vk</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">apfs</span><span class="p">.</span><span class="nx">UnlockVolumeKey</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">passphrase</span><span class="p">,</span><span class="w"> </span><span class="nx">apfs</span><span class="p">.</span><span class="nx">DefaultLimits</span><span class="p">)</span>
+<span class="c1">// vk.VEK, and vk.VolumeUUID: the volume the keybag names</span>
+<span class="nx">sc</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">apfs</span><span class="p">.</span><span class="nx">NewSectorCipher</span><span class="p">(</span><span class="nx">vk</span><span class="p">.</span><span class="nx">VEK</span><span class="p">)</span>
+<span class="nx">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sc</span><span class="p">.</span><span class="nx">Decrypt</span><span class="p">(</span><span class="nx">block</span><span class="p">,</span><span class="w"> </span><span class="nx">paddr</span><span class="o">*</span><span class="kt">uint64</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">block</span><span class="p">)</span><span class="o">/</span><span class="nx">apfs</span><span class="p">.</span><span class="nx">SectorSize</span><span class="p">))</span>
+</code></pre></div>
+<p><code>go-filesystems/apfs</code> (<code>OpenFDE</code>, <code>OpenFDEFromBlockDevice</code>) reads volumes
+this way.</p>
+<p>Errors are kept apart:</p>
+<ul>
+<li><code>ErrLimit</code>: a locker asked for more key-derivation work than the <code>Limits</code> allow.</li>
+<li><code>ErrWrongPassphrase</code>: lockers were tried and none opened.</li>
+<li>Anything else is a structural error in the image.</li>
+</ul>
+<p>Untrusted geometry is bounded:</p>
+<ul>
+<li>the block size must be a power of two in [4096, 65536];</li>
+<li>a keybag may be at most 16 blocks;</li>
+<li>block offsets must fit in an <code>int64</code>.</li>
+</ul>
+<p>The DER blobs are parsed with every length checked. Two fuzz targets cover
+this: <code>FuzzParseBlobs</code> and <code>FuzzUnlockVolumeKey</code>.</p>
 <h2 id="apple-shape-encrypted-container-support">Apple-shape encrypted-container support</h2>
 <p>Beyond the legacy format, this package exposes the byte-level primitives needed
 to build and parse keybags in <strong>Apple's exact on-disk shape</strong> — the layout
@@ -1192,10 +1254,10 @@ not APFS FDE — a different layer entirely.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>
