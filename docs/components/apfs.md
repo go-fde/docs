@@ -57,6 +57,46 @@ on the `nx_flags & NX_CRYPTO_SW` bit through the same `apfs.Open` /
 | Institutional Recovery Key (IRK) | ✅ (RSA-OAEP wrapping of the KEK) |
 | T2 / Secure Enclave mediated keys | ❌ (hardware access required) |
 | Encrypted metadata (APFS snapshots, etc.) | ❌ (payload encryption only) |
+| Volume key without a Device (`UnlockVolumeKey`, `SectorCipher`) | ✅ (v0.2.0) |
+| Bounded unlock of untrusted images (`Limits`, `ErrLimit`, `ErrWrongPassphrase`) | ✅ |
+
+## Reading a FileVault volume: `UnlockVolumeKey` and `SectorCipher`
+
+A `Device` decrypts **every** byte it reads. On a real FileVault container,
+the container metadata is plaintext: the superblock, checkpoints, object maps
+and volume superblock. Only two kinds of data are encrypted with the VEK
+(Apple File System Reference, "Encryption"):
+
+- file-system tree nodes whose object-map entry has `OMAP_VAL_ENCRYPTED`;
+- file extents, using `crypto_id` as the tweak base.
+
+A file-system reader therefore takes the key and a cipher it can point at
+single blocks:
+
+```go
+vk, err := apfs.UnlockVolumeKey(r, passphrase, apfs.DefaultLimits)
+// vk.VEK, and vk.VolumeUUID: the volume the keybag names
+sc, err := apfs.NewSectorCipher(vk.VEK)
+err = sc.Decrypt(block, paddr*uint64(len(block)/apfs.SectorSize))
+```
+
+`go-filesystems/apfs` (`OpenFDE`, `OpenFDEFromBlockDevice`) reads volumes
+this way.
+
+Errors are kept apart:
+
+- `ErrLimit`: a locker asked for more key-derivation work than the `Limits` allow.
+- `ErrWrongPassphrase`: lockers were tried and none opened.
+- Anything else is a structural error in the image.
+
+Untrusted geometry is bounded:
+
+- the block size must be a power of two in [4096, 65536];
+- a keybag may be at most 16 blocks;
+- block offsets must fit in an `int64`.
+
+The DER blobs are parsed with every length checked. Two fuzz targets cover
+this: `FuzzParseBlobs` and `FuzzUnlockVolumeKey`.
 
 ## Apple-shape encrypted-container support
 
