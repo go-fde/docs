@@ -50,7 +50,7 @@ on the `nx_flags & NX_CRYPTO_SW` bit through the same `apfs.Open` /
 | AES Key Wrap / Unwrap (RFC 3394) | ✅ |
 | Cipher: AES-128-XTS (`vek_size` = 32) | ✅ |
 | Cipher: AES-256-XTS (`vek_size` = 64) | ✅ |
-| At-rest keybag XTS encryption / decryption | ✅ |
+| At-rest keybag XTS encryption / decryption | ✅ (any block size from 4096 to 65536 since v0.3.0: `DecryptKeybagBlocks`, `EncryptKeybagBlocks`) |
 | ASN.1 VEKBLOB / KEKBLOB build + parse | ✅ |
 | Keybag block builder | ✅ (`PackKeybagBlock` — Apple's exact obj_phys + apfs_kb_locker shape) |
 | Personal Recovery Key (PRK) | ✅ (passphrase-style locker with a well-known UUID) |
@@ -117,7 +117,12 @@ The recipe (validated against Apple's reference):
 
 - **At-rest XTS**: AES-XTS-128, key = `uuid || uuid` (container UUID for the
   container keybag, volume UUID for the volume keybag), 512-byte XTS sectors,
-  tweak = `paddr × 8 + sector_index`.
+  tweak = `paddr × blockSize/512 + sector_index`. That is `paddr × 8` for the
+  common 4096-byte block (apfs-fuse `KeyMgmt.cpp`: `cs_factor = blocksize /
+  0x200`). Since v0.3.0, `DecryptKeybagBlocks`, `EncryptKeybagBlocks`,
+  `DecryptVolumeBlocks` and `EncryptVolumeBlocks` take the container's block
+  size, and the unlock path passes it; `DecryptContainerKeybag` and its
+  siblings remain the 4096-byte case.
 - **Keybag block layout**: 32-byte `obj_phys` (type `0x6b657973` "syek", sealed
   Fletcher-64 cksum) + 16-byte `apfs_kb_locker` (version=2, nkeys, nbytes
   including the 16-byte header AND the trailing 16-byte alignment pad) +
