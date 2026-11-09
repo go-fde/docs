@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -517,6 +517,34 @@
   
   
     <li class="md-nav__item">
+      <a href="bitlocker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bitlocker — BitLocker (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="clear/" class="md-nav__link">
         
   
@@ -633,6 +661,12 @@ format.</p>
 <td>APFS FileVault 2 read/write; AES-XTS, AES Key Wrap (RFC 3394), PBKDF2 / Argon2id; PRK/IRK recovery; Apple-shape parity with <code>diskutil</code>.</td>
 </tr>
 <tr>
+<td><a href="bitlocker/"><code>bitlocker</code></a></td>
+<td><code>github.com/go-fde/bitlocker</code></td>
+<td>backend</td>
+<td>BitLocker <strong>read-only</strong> (Windows 7+, To Go); password, recovery password, <code>.BEK</code> startup key, clear key; AES-CBC ± Elephant and AES-XTS; byte-for-byte equal to cryptsetup's <code>bitlkOpen</code> on Windows-made volumes.</td>
+</tr>
+<tr>
 <td><a href="clear/"><code>clear</code></a></td>
 <td><code>github.com/go-fde/clear</code></td>
 <td>backend</td>
@@ -644,7 +678,9 @@ format.</p>
 <p>Every backend exposes a <code>Device</code> whose <code>ReadAt</code>/<code>WriteAt</code>/<code>Size</code>/<code>Close</code>
 methods the dispatcher returns uniformly. The offset semantics differ per
 backend (LUKS hides its header and counts from payload sector 0; APFS and CLEAR
-use absolute offsets from the device start) — see each component page.</p>
+use absolute offsets from the device start; BitLocker counts in the decrypted
+volume, which has the device's size) — see each component page. BitLocker
+is read-only: its <code>WriteAt</code> returns <code>bitlocker.ErrReadOnly</code>.</p>
 <p>All backends also provide an <code>OpenFrom</code> / <code>CreateFrom</code> variant that accepts any
 value satisfying:</p>
 <div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
@@ -713,7 +749,7 @@ QCOW2 virtual disk (or any other RW backend), not just a plain file.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

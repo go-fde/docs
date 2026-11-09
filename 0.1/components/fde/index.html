@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -446,6 +446,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#bitlocker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BitLocker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -650,6 +661,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../bitlocker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bitlocker — BitLocker (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../clear/" class="md-nav__link">
         
   
@@ -709,6 +748,17 @@
     <span class="md-ellipsis">
       
         Format detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bitlocker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BitLocker
       
     </span>
   </a>
@@ -868,7 +918,7 @@
 <h1 id="fde-unified-dispatcher">fde — unified dispatcher</h1>
 <p><code>github.com/go-fde/fde</code> is the <strong>unified dispatcher</strong> for full-disk-encryption
 block devices. It exposes a single <code>Device</code> interface and a set of dispatcher
-functions that abstract over three backends:</p>
+functions that abstract over four backends:</p>
 <table>
 <thead>
 <tr>
@@ -889,22 +939,41 @@ functions that abstract over three backends:</p>
 <td><a href="../apfs/"><code>github.com/go-fde/apfs</code></a></td>
 </tr>
 <tr>
+<td>BitLocker, <strong>read-only</strong></td>
+<td><code>fde.BITLOCKER</code></td>
+<td><a href="../bitlocker/"><code>github.com/go-fde/bitlocker</code></a></td>
+</tr>
+<tr>
 <td>Plaintext passthrough</td>
 <td><code>fde.CLEAR</code></td>
 <td><a href="../clear/"><code>github.com/go-fde/clear</code></a></td>
 </tr>
 </tbody>
 </table>
-<p>Pass <code>fde.Auto</code> to any <code>Open</code>, <code>OpenFrom</code>, <code>Create</code>, or <code>CreateFrom</code> call to
-auto-detect the format from the on-disk header.</p>
+<p>Pass <code>fde.Auto</code> to any <code>Open</code> or <code>OpenFrom</code> call to auto-detect the format
+from the on-disk header.</p>
 <h2 id="format-detection">Format detection</h2>
-<p><code>Detect(path)</code> and <code>DetectFrom(rw)</code> identify the format by reading the first
-36 bytes of the device:</p>
+<p><code>Detect(path)</code> and <code>DetectFrom(rw)</code> identify the format from the first sector
+of the device:</p>
 <ul>
 <li>bytes 0–5 equal <code>"LUKS\xba\xbe"</code> → <code>LUKS</code></li>
 <li>bytes 32–35 equal <code>"NXSB"</code> → <code>APFS</code></li>
+<li>bytes 3–10 equal <code>"-FVE-FS-"</code>, or <code>"MSWIN4.1"</code> with BitLocker's identifier
+  at byte 424 (To Go; plain FAT32 also writes <code>"MSWIN4.1"</code>) → <code>BITLOCKER</code></li>
 <li>otherwise → <code>CLEAR</code></li>
 </ul>
+<h2 id="bitlocker">BitLocker</h2>
+<p>The <code>passphrase</code> can be:</p>
+<ul>
+<li>a password;</li>
+<li>a recovery password (<code>"123456-…"</code>, 48 digits);</li>
+<li>the contents of a <code>.BEK</code> startup key file;</li>
+<li><code>nil</code> for a clear-key volume.</li>
+</ul>
+<p><code>WriteAt</code> returns <code>bitlocker.ErrReadOnly</code>. <code>Create(fde.BITLOCKER, …)</code> returns
+<code>fde.ErrCreateBitLocker</code>. <code>OpenFrom</code> needs the device's size: an <code>RW</code> with a
+<code>Size() int64</code> method, or with <code>Stat()</code> like <code>*os.File</code>. See
+<a href="../bitlocker/">bitlocker</a>.</p>
 <h2 id="usage">Usage</h2>
 <h3 id="open-an-existing-device-explicit-type">Open an existing device (explicit type)</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">"github.com/go-fde/fde"</span>
@@ -1021,6 +1090,14 @@ for <code>CLEAR</code> (no header is written).</p>
 <td>APFS-on-RW shorthand</td>
 </tr>
 <tr>
+<td><code>OpenBitLocker(path, passphrase) (Device, error)</code></td>
+<td>BitLocker shorthand (read-only)</td>
+</tr>
+<tr>
+<td><code>OpenBitLockerFrom(rw, passphrase) (Device, error)</code></td>
+<td>BitLocker-on-RW shorthand; <code>rw</code> must tell its size</td>
+</tr>
+<tr>
 <td><code>OpenClear(path) (Device, error)</code></td>
 <td>Plaintext shorthand</td>
 </tr>
@@ -1095,6 +1172,8 @@ for <code>CLEAR</code> (no header is written).</p>
   (byte 0 of the device). Block 0 is the NX superblock, block 1 is the key bag,
   payload starts at block 2.</li>
 <li><strong>CLEAR</strong> <code>ReadAt</code>/<code>WriteAt</code> offsets are <strong>absolute from the file start</strong>.</li>
+<li><strong>BITLOCKER</strong> <code>ReadAt</code> offsets are those of the <strong>decrypted volume</strong>, which
+  has the device's size: offset 0 is the volume's own boot sector.</li>
 </ul>
 
 
@@ -1154,7 +1233,7 @@ for <code>CLEAR</code> (no header is written).</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

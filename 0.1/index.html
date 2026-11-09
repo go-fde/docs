@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -524,6 +524,34 @@
   
   
     <li class="md-nav__item">
+      <a href="components/bitlocker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bitlocker — BitLocker (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="components/clear/" class="md-nav__link">
         
   
@@ -622,11 +650,12 @@
 block device whatever its on-disk format, with no cgo and no root.</p>
 <p>A single <strong><code>Device</code> contract</strong> (<code>ReadAt</code>/<code>WriteAt</code>/<code>Size</code>/<code>Close</code>) hides <em>how</em>
 the bytes are protected behind a uniform read/write interface. The
-<a href="components/fde/"><code>fde</code></a> dispatcher reads the first 36 bytes of a device,
+<a href="components/fde/"><code>fde</code></a> dispatcher reads the first sector of a device,
 recognises the format, and hands back the matching backend — so a caller can
 unlock a Linux <a href="components/luks/">LUKS</a> container, an Apple
-<a href="components/apfs/">APFS FileVault 2</a> volume, or a <a href="components/clear/">plaintext</a>
-disk through exactly the same calls.</p>
+<a href="components/apfs/">APFS FileVault 2</a> volume, a Windows
+<a href="components/bitlocker/">BitLocker</a> volume (read-only), or a
+<a href="components/clear/">plaintext</a> disk through exactly the same calls.</p>
 <p>Each backend reads and writes real containers byte-for-byte: LUKS output is
 interoperable with <code>cryptsetup</code>, and the APFS Apple-shape format matches
 <code>diskutil apfs encryptVolume</code>. All four modules are standard-library only
@@ -659,6 +688,11 @@ QCOW2 virtual disk.</p>
 <td>Read/write APFS FileVault 2 (little-endian); AES-XTS volume keys, AES-KW key wrapping, PBKDF2 / Argon2id; Apple-shape parity with <code>diskutil</code>.</td>
 </tr>
 <tr>
+<td><a href="components/bitlocker/"><code>bitlocker</code></a></td>
+<td>backend</td>
+<td>Read-only BitLocker (Windows 7+, To Go): password, recovery password, <code>.BEK</code> startup key, clear key; AES-CBC ± Elephant and AES-XTS; equal to cryptsetup's <code>bitlkOpen</code> on Windows-made volumes.</td>
+</tr>
+<tr>
 <td><a href="components/clear/"><code>clear</code></a></td>
 <td>backend</td>
 <td>Plaintext passthrough — forwards all I/O unencrypted so the dispatcher treats unencrypted devices uniformly.</td>
@@ -666,15 +700,18 @@ QCOW2 virtual disk.</p>
 </tbody>
 </table>
 <h2 id="format-detection">Format detection</h2>
-<p><code>fde.Detect(path)</code> / <code>fde.DetectFrom(rw)</code> read the first 36 bytes of the device
+<p><code>fde.Detect(path)</code> / <code>fde.DetectFrom(rw)</code> read the first sector of the device
 and decide:</p>
 <ul>
 <li>bytes 0–5 equal <code>"LUKS\xba\xbe"</code> → <strong>LUKS</strong></li>
 <li>bytes 32–35 equal <code>"NXSB"</code> → <strong>APFS</strong></li>
+<li>bytes 3–10 equal <code>"-FVE-FS-"</code>, or <code>"MSWIN4.1"</code> with BitLocker's identifier
+  at byte 424 (To Go) → <strong>BITLOCKER</strong></li>
 <li>otherwise → <strong>CLEAR</strong></li>
 </ul>
-<p>Pass <code>fde.Auto</code> to any <code>Open</code> / <code>OpenFrom</code> / <code>Create</code> call to auto-detect, or
-name the format explicitly with <code>fde.LUKS</code>, <code>fde.APFS</code>, or <code>fde.CLEAR</code>.</p>
+<p>Pass <code>fde.Auto</code> to any <code>Open</code> / <code>OpenFrom</code> call to auto-detect, or name the
+format explicitly with <code>fde.LUKS</code>, <code>fde.APFS</code>, <code>fde.BITLOCKER</code>, or
+<code>fde.CLEAR</code>.</p>
 
 
 
@@ -733,7 +770,7 @@ name the format explicitly with <code>fde.LUKS</code>, <code>fde.APFS</code>, or
       <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>
