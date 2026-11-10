@@ -842,7 +842,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 <tbody>
 <tr>
 <td>Ciphers (XTS)</td>
-<td>AES, Twofish, AES-Twofish (cryptsetup <code>twofish-aes</code>)</td>
+<td>AES, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent</td>
 </tr>
 <tr>
 <td>KDFs</td>
@@ -861,7 +861,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 <p><strong>Not supported yet.</strong> A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:</p>
 <ul>
-<li>Serpent, Camellia and Kuznyechik, and the cascades that use them
+<li>Camellia and Kuznyechik, and the cascades that use them
   (<a href="https://github.com/go-fde/fde/issues/28">go-fde/fde#28</a>);</li>
 <li>the Whirlpool and Streebog KDFs;</li>
 <li>TrueCrypt's LRW and CBC modes, and headers older than version 3.</li>
@@ -901,13 +901,14 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 <code>tests/tcrypt-compat-test</code>. The FAT file system inside must have the UUID
 that test checks.</p>
 <ul>
-<li>35 volumes open and match. They cover VeraCrypt and TrueCrypt, every
-  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, and
-  the AES-Twofish cascade.</li>
-<li>The 55 volumes that use primitives not supported yet must be refused, not
+<li>55 volumes open and match. They cover VeraCrypt and TrueCrypt, every
+  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, AES,
+  Serpent and Twofish alone, and all five cascades of them.</li>
+<li>The 35 volumes that use primitives not supported yet must be refused, not
   misread.</li>
-<li>Reversing the cascade's decryption order fails the three cascade
-  volumes, so the order is checked.</li>
+<li>Reversing the cascade's decryption order fails all 20 cascade volumes,
+  so the order is checked. The same images confirm Serpent's byte order,
+  of the two in circulation.</li>
 </ul>
 <p>The archive is GPL-2.0+, so CI fetches it pinned by commit and SHA-256
 instead of committing it.</p>
@@ -928,7 +929,12 @@ instead of committing it.</p>
 <code>DecryptSectors</code>, which is ahead of OpenSSL on one core. Twofish runs one
 block at a time through <code>golang.org/x/crypto/twofish</code>. It has not been
 measured against a reference implementation yet
-(<a href="https://github.com/go-fde/veracrypt/issues/3">veracrypt#3</a>).</p>
+(<a href="https://github.com/go-fde/veracrypt/issues/3">veracrypt#3</a>). Serpent
+runs one block at a time through
+<a href="https://github.com/go-encryptions/serpent">go-encryptions/serpent</a>,
+bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
+than Botan on one core
+(<a href="https://github.com/go-encryptions/serpent/issues/2">serpent#2</a>).</p>
 <h2 id="references">References</h2>
 <ul>
 <li>cryptsetup <code>lib/tcrypt/tcrypt.c</code>: the KDF and cipher tables, the key
