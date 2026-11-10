@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker and VeraCrypt (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -457,6 +457,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#veracrypt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VeraCrypt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -689,6 +700,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../veracrypt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    veracrypt — VeraCrypt and TrueCrypt (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../clear/" class="md-nav__link">
         
   
@@ -759,6 +798,17 @@
     <span class="md-ellipsis">
       
         BitLocker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#veracrypt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VeraCrypt
       
     </span>
   </a>
@@ -918,7 +968,7 @@
 <h1 id="fde-unified-dispatcher">fde — unified dispatcher</h1>
 <p><code>github.com/go-fde/fde</code> is the <strong>unified dispatcher</strong> for full-disk-encryption
 block devices. It exposes a single <code>Device</code> interface and a set of dispatcher
-functions that abstract over four backends:</p>
+functions that abstract over five backends:</p>
 <table>
 <thead>
 <tr>
@@ -944,6 +994,11 @@ functions that abstract over four backends:</p>
 <td><a href="../bitlocker/"><code>github.com/go-fde/bitlocker</code></a></td>
 </tr>
 <tr>
+<td>VeraCrypt and TrueCrypt, <strong>read-only</strong>, never auto-detected</td>
+<td><code>fde.VERACRYPT</code></td>
+<td><a href="../veracrypt/"><code>github.com/go-fde/veracrypt</code></a></td>
+</tr>
+<tr>
 <td>Plaintext passthrough</td>
 <td><code>fde.CLEAR</code></td>
 <td><a href="../clear/"><code>github.com/go-fde/clear</code></a></td>
@@ -951,7 +1006,8 @@ functions that abstract over four backends:</p>
 </tbody>
 </table>
 <p>Pass <code>fde.Auto</code> to any <code>Open</code> or <code>OpenFrom</code> call to auto-detect the format
-from the on-disk header.</p>
+from the on-disk header. VeraCrypt is the exception: its header cannot be told
+apart from random bytes, so it must be named.</p>
 <h2 id="format-detection">Format detection</h2>
 <p><code>Detect(path)</code> and <code>DetectFrom(rw)</code> identify the format from the first sector
 of the device:</p>
@@ -960,7 +1016,7 @@ of the device:</p>
 <li>bytes 32–35 equal <code>"NXSB"</code> → <code>APFS</code></li>
 <li>bytes 3–10 equal <code>"-FVE-FS-"</code>, or <code>"MSWIN4.1"</code> with BitLocker's identifier
   at byte 424 (To Go; plain FAT32 also writes <code>"MSWIN4.1"</code>) → <code>BITLOCKER</code></li>
-<li>otherwise → <code>CLEAR</code></li>
+<li>otherwise → <code>CLEAR</code> (a VeraCrypt volume, among others, detects as <code>CLEAR</code>)</li>
 </ul>
 <h2 id="bitlocker">BitLocker</h2>
 <p>The <code>passphrase</code> can be:</p>
@@ -974,6 +1030,15 @@ of the device:</p>
 <code>fde.ErrCreateBitLocker</code>. <code>OpenFrom</code> needs the device's size: an <code>RW</code> with a
 <code>Size() int64</code> method, or with <code>Stat()</code> like <code>*os.File</code>. See
 <a href="../bitlocker/">bitlocker</a>.</p>
+<h2 id="veracrypt">VeraCrypt</h2>
+<p><code>Open(fde.VERACRYPT, path, password)</code> opens a VeraCrypt or TrueCrypt volume
+read-only. The backend tries each KDF and cipher until the header decrypts, as
+VeraCrypt itself does. With a wrong password every pair is tried, which takes
+several seconds; the error is <code>veracrypt.ErrWrongSecret</code>.</p>
+<p>The shorthand passes only a password. Keyfiles, a PIM, hidden volumes, backup
+headers, or naming the KDF and cipher need <a href="../veracrypt/">veracrypt</a> directly.</p>
+<p><code>WriteAt</code> returns <code>veracrypt.ErrReadOnly</code>. <code>Create(fde.VERACRYPT, …)</code> returns
+<code>fde.ErrCreateVeraCrypt</code>. <code>OpenFrom</code> needs the device's size, as for BitLocker.</p>
 <h2 id="usage">Usage</h2>
 <h3 id="open-an-existing-device-explicit-type">Open an existing device (explicit type)</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">"github.com/go-fde/fde"</span>
@@ -983,6 +1048,9 @@ of the device:</p>
 
 <span class="c1">// APFS</span>
 <span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">APFS</span><span class="p">,</span><span class="w"> </span><span class="s">"/dev/disk2s2"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"passphrase"</span><span class="p">))</span>
+
+<span class="c1">// VeraCrypt (never auto-detected)</span>
+<span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">VERACRYPT</span><span class="p">,</span><span class="w"> </span><span class="s">"/path/to/volume.hc"</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">(</span><span class="s">"password"</span><span class="p">))</span>
 
 <span class="c1">// Plaintext</span>
 <span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">fde</span><span class="p">.</span><span class="nx">CLEAR</span><span class="p">,</span><span class="w"> </span><span class="s">"/path/to/disk.raw"</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
@@ -1098,6 +1166,14 @@ for <code>CLEAR</code> (no header is written).</p>
 <td>BitLocker-on-RW shorthand; <code>rw</code> must tell its size</td>
 </tr>
 <tr>
+<td><code>OpenVeraCrypt(path, password) (Device, error)</code></td>
+<td>VeraCrypt/TrueCrypt shorthand (read-only)</td>
+</tr>
+<tr>
+<td><code>OpenVeraCryptFrom(rw, password) (Device, error)</code></td>
+<td>VeraCrypt-on-RW shorthand; <code>rw</code> must tell its size</td>
+</tr>
+<tr>
 <td><code>OpenClear(path) (Device, error)</code></td>
 <td>Plaintext shorthand</td>
 </tr>
@@ -1118,11 +1194,11 @@ for <code>CLEAR</code> (no header is written).</p>
 <tbody>
 <tr>
 <td><code>Create(kind, path, passphrase) (Device, error)</code></td>
-<td>Write container header to existing file</td>
+<td>Write container header to existing file (not BitLocker or VeraCrypt)</td>
 </tr>
 <tr>
 <td><code>CreateFrom(kind, rw, passphrase) (Device, error)</code></td>
-<td>Write container header to existing <code>RW</code></td>
+<td>Write container header to existing <code>RW</code> (not BitLocker or VeraCrypt)</td>
 </tr>
 </tbody>
 </table>
@@ -1174,6 +1250,8 @@ for <code>CLEAR</code> (no header is written).</p>
 <li><strong>CLEAR</strong> <code>ReadAt</code>/<code>WriteAt</code> offsets are <strong>absolute from the file start</strong>.</li>
 <li><strong>BITLOCKER</strong> <code>ReadAt</code> offsets are those of the <strong>decrypted volume</strong>, which
   has the device's size: offset 0 is the volume's own boot sector.</li>
+<li><strong>VERACRYPT</strong> <code>ReadAt</code> offsets are <strong>relative to the data area</strong>: offset 0 is
+  the volume's file system. <code>Size()</code> is the volume size the header records.</li>
 </ul>
 
 

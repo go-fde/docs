@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker and VeraCrypt (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -545,6 +545,34 @@
   
   
     <li class="md-nav__item">
+      <a href="veracrypt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    veracrypt — VeraCrypt and TrueCrypt (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="clear/" class="md-nav__link">
         
   
@@ -667,6 +695,12 @@ format.</p>
 <td>BitLocker <strong>read-only</strong> (Windows 7+, To Go); password, recovery password, <code>.BEK</code> startup key, clear key; AES-CBC ± Elephant and AES-XTS; byte-for-byte equal to cryptsetup's <code>bitlkOpen</code> on Windows-made volumes.</td>
 </tr>
 <tr>
+<td><a href="veracrypt/"><code>veracrypt</code></a></td>
+<td><code>github.com/go-fde/veracrypt</code></td>
+<td>backend</td>
+<td>VeraCrypt and TrueCrypt <strong>read-only</strong>, opened by name (the header is ciphertext); AES, Twofish, AES-Twofish XTS; PBKDF2 and Argon2id; PIM, keyfiles, hidden volumes; checked on 35 volumes from cryptsetup's corpus.</td>
+</tr>
+<tr>
 <td><a href="clear/"><code>clear</code></a></td>
 <td><code>github.com/go-fde/clear</code></td>
 <td>backend</td>
@@ -679,8 +713,9 @@ format.</p>
 methods the dispatcher returns uniformly. The offset semantics differ per
 backend (LUKS hides its header and counts from payload sector 0; APFS and CLEAR
 use absolute offsets from the device start; BitLocker counts in the decrypted
-volume, which has the device's size) — see each component page. BitLocker
-is read-only: its <code>WriteAt</code> returns <code>bitlocker.ErrReadOnly</code>.</p>
+volume, which has the device's size; VeraCrypt counts from its data area) —
+see each component page. BitLocker and VeraCrypt are read-only: their
+<code>WriteAt</code> returns <code>bitlocker.ErrReadOnly</code> or <code>veracrypt.ErrReadOnly</code>.</p>
 <p>All backends also provide an <code>OpenFrom</code> / <code>CreateFrom</code> variant that accepts any
 value satisfying:</p>
 <div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>

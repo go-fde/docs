@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker and VeraCrypt (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -552,6 +552,34 @@
   
   
     <li class="md-nav__item">
+      <a href="components/veracrypt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    veracrypt — VeraCrypt and TrueCrypt (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="components/clear/" class="md-nav__link">
         
   
@@ -654,12 +682,14 @@ the bytes are protected behind a uniform read/write interface. The
 recognises the format, and hands back the matching backend — so a caller can
 unlock a Linux <a href="components/luks/">LUKS</a> container, an Apple
 <a href="components/apfs/">APFS FileVault 2</a> volume, a Windows
-<a href="components/bitlocker/">BitLocker</a> volume (read-only), or a
-<a href="components/clear/">plaintext</a> disk through exactly the same calls.</p>
+<a href="components/bitlocker/">BitLocker</a> volume (read-only), a
+<a href="components/veracrypt/">VeraCrypt or TrueCrypt</a> volume (read-only, opened by
+name), or a <a href="components/clear/">plaintext</a> disk through exactly the same
+calls.</p>
 <p>Each backend reads and writes real containers byte-for-byte: LUKS output is
 interoperable with <code>cryptsetup</code>, and the APFS Apple-shape format matches
-<code>diskutil apfs encryptVolume</code>. All four modules are standard-library only
-(<code>CGO_ENABLED=0</code>) and layer cleanly on top of any read-write-closable block
+<code>diskutil apfs encryptVolume</code>. Every module is pure Go (<code>CGO_ENABLED=0</code>) and
+layers cleanly on top of any read-write-closable block
 device — a raw file, or a <a href="https://github.com/go-diskimages">go-diskimages</a>
 QCOW2 virtual disk.</p>
 <h2 id="components">Components</h2>
@@ -693,6 +723,11 @@ QCOW2 virtual disk.</p>
 <td>Read-only BitLocker (Windows 7+, To Go): password, recovery password, <code>.BEK</code> startup key, clear key; AES-CBC ± Elephant and AES-XTS; equal to cryptsetup's <code>bitlkOpen</code> on Windows-made volumes.</td>
 </tr>
 <tr>
+<td><a href="components/veracrypt/"><code>veracrypt</code></a></td>
+<td>backend</td>
+<td>Read-only VeraCrypt and TrueCrypt: AES, Twofish and AES-Twofish XTS; PBKDF2 (SHA-512, SHA-256, BLAKE2s, RIPEMD-160) and Argon2id; PIM, keyfiles, hidden volumes; 35 volumes from cryptsetup's corpus open and match.</td>
+</tr>
+<tr>
 <td><a href="components/clear/"><code>clear</code></a></td>
 <td>backend</td>
 <td>Plaintext passthrough — forwards all I/O unencrypted so the dispatcher treats unencrypted devices uniformly.</td>
@@ -710,8 +745,9 @@ and decide:</p>
 <li>otherwise → <strong>CLEAR</strong></li>
 </ul>
 <p>Pass <code>fde.Auto</code> to any <code>Open</code> / <code>OpenFrom</code> call to auto-detect, or name the
-format explicitly with <code>fde.LUKS</code>, <code>fde.APFS</code>, <code>fde.BITLOCKER</code>, or
-<code>fde.CLEAR</code>.</p>
+format explicitly with <code>fde.LUKS</code>, <code>fde.APFS</code>, <code>fde.BITLOCKER</code>,
+<code>fde.VERACRYPT</code>, or <code>fde.CLEAR</code>. A VeraCrypt header cannot be told apart from
+random bytes, so <code>Auto</code> never chooses it: VeraCrypt is always named.</p>
 
 
 
