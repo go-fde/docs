@@ -1,5 +1,5 @@
 site_name: go-fde
-site_description: Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.
+site_description: Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker and VeraCrypt (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.
 site_url: https://go-fde.github.io/docs/
 repo_url: https://github.com/go-fde
 repo_name: go-fde
@@ -43,4 +43,5 @@ nav:
       - "luks — LUKS1/LUKS2": components/luks.md
       - "apfs — APFS FileVault 2": components/apfs.md
       - "bitlocker — BitLocker (read-only)": components/bitlocker.md
+      - "veracrypt — VeraCrypt and TrueCrypt (read-only)": components/veracrypt.md
       - "clear — plaintext passthrough": components/clear.md
