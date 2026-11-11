@@ -842,7 +842,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 <tbody>
 <tr>
 <td>Ciphers (XTS)</td>
-<td>AES, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent</td>
+<td>AES, Camellia, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent</td>
 </tr>
 <tr>
 <td>KDFs</td>
@@ -861,7 +861,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 <p><strong>Not supported yet.</strong> A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:</p>
 <ul>
-<li>Camellia and Kuznyechik, and the cascades that use them
+<li>Kuznyechik, and the cascades that use it
   (<a href="https://github.com/go-fde/fde/issues/28">go-fde/fde#28</a>);</li>
 <li>the Whirlpool and Streebog KDFs;</li>
 <li>TrueCrypt's LRW and CBC modes, and headers older than version 3.</li>
@@ -901,14 +901,17 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 <code>tests/tcrypt-compat-test</code>. The FAT file system inside must have the UUID
 that test checks.</p>
 <ul>
-<li>55 volumes open and match. They cover VeraCrypt and TrueCrypt, every
+<li>56 volumes open and match. They cover VeraCrypt and TrueCrypt, every
   supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, AES,
-  Serpent and Twofish alone, and all five cascades of them.</li>
-<li>The 35 volumes that use primitives not supported yet must be refused, not
+  Camellia, Serpent and Twofish alone, and the five cascades of AES,
+  Serpent and Twofish.</li>
+<li>The 34 volumes that use primitives not supported yet must be refused, not
   misread.</li>
 <li>Reversing the cascade's decryption order fails all 20 cascade volumes,
   so the order is checked. The same images confirm Serpent's byte order,
   of the two in circulation.</li>
+<li>The corpus has no Camellia-Serpent volume. That cascade is checked only
+  by a round trip through the test writer, with cryptsetup's key offsets.</li>
 </ul>
 <p>The archive is GPL-2.0+, so CI fetches it pinned by commit and SHA-256
 instead of committing it.</p>
@@ -934,7 +937,11 @@ runs one block at a time through
 <a href="https://github.com/go-encryptions/serpent">go-encryptions/serpent</a>,
 bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
 than Botan on one core
-(<a href="https://github.com/go-encryptions/serpent/issues/2">serpent#2</a>).</p>
+(<a href="https://github.com/go-encryptions/serpent/issues/2">serpent#2</a>).
+Camellia runs through
+<a href="https://github.com/go-encryptions/camellia">go-encryptions/camellia</a>, pure
+Go. On one core it is level with Botan's scalar build and 1.12× faster than
+Botan's default build.</p>
 <h2 id="references">References</h2>
 <ul>
 <li>cryptsetup <code>lib/tcrypt/tcrypt.c</code>: the KDF and cipher tables, the key
