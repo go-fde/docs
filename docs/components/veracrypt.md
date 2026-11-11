@@ -32,7 +32,7 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 
 | | |
 |---|---|
-| Ciphers (XTS) | AES, Camellia, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
+| Ciphers (XTS) | every XTS chain VeraCrypt offers: AES, Camellia, Kuznyechik, Serpent, Twofish, and the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Kuznyechik, Camellia-Serpent, Kuznyechik-AES, Kuznyechik-Serpent-Camellia, Kuznyechik-Twofish, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
 | KDFs | PBKDF2 with SHA-512, SHA-256, BLAKE2s-256 or RIPEMD-160; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy` |
 | Options | PIM, keyfiles (up to 1 MiB each), passwords up to 128 bytes |
 | Volumes | normal, hidden, backup headers; VeraCrypt and TrueCrypt 5.0 and later |
@@ -40,9 +40,8 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 **Not supported yet.** A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:
 
-- Kuznyechik, and the cascades that use it
+- the Whirlpool and Streebog KDFs
   ([go-fde/fde#28](https://github.com/go-fde/fde/issues/28));
-- the Whirlpool and Streebog KDFs;
 - TrueCrypt's LRW and CBC modes, and headers older than version 3.
 
 **Refused** with `ErrUnsupported`: system encryption, and sector sizes
@@ -86,17 +85,17 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 `tests/tcrypt-compat-test`. The FAT file system inside must have the UUID
 that test checks.
 
-- 56 volumes open and match. They cover VeraCrypt and TrueCrypt, every
-  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, AES,
-  Camellia, Serpent and Twofish alone, and the five cascades of AES,
-  Serpent and Twofish.
-- The 34 volumes that use primitives not supported yet must be refused, not
+- 59 volumes open and match. They cover VeraCrypt and TrueCrypt, every
+  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, every
+  cipher alone, and seven of the ten cascades.
+- The 31 volumes that use primitives not supported yet must be refused, not
   misread.
-- Reversing the cascade's decryption order fails all 20 cascade volumes,
-  so the order is checked. The same images confirm Serpent's byte order,
-  of the two in circulation.
-- The corpus has no Camellia-Serpent volume. That cascade is checked only
-  by a round trip through the test writer, with cryptsetup's key offsets.
+- Reversing the cascade's decryption order fails all 22 cascade volumes,
+  so the order is checked. The same images confirm Serpent's and
+  Kuznyechik's byte orders.
+- The corpus has no Camellia-Serpent, Kuznyechik-AES or Kuznyechik-Twofish
+  volume. Those three are checked only by a round trip through the test
+  writer, with cryptsetup's key offsets.
 
 The archive is GPL-2.0+, so CI fetches it pinned by commit and SHA-256
 instead of committing it.
@@ -128,7 +127,10 @@ than Botan on one core
 Camellia runs through
 [go-encryptions/camellia](https://github.com/go-encryptions/camellia), pure
 Go. On one core it is level with Botan's scalar build and 1.12× faster than
-Botan's default build.
+Botan's default build. Kuznyechik runs through
+[go-encryptions/kuznyechik](https://github.com/go-encryptions/kuznyechik),
+pure Go with lookup tables. On one core it is 1.14× (encryption) and 1.16×
+(decryption) faster than Botan 3.14.1.
 
 ## References
 

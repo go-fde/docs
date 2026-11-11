@@ -29,7 +29,7 @@ QCOW2 virtual disk.
 | [`luks`](components/luks.md) | backend | Read/write LUKS1 and LUKS2 (big-endian on-disk header); PBKDF2 / Argon2i / Argon2id, AES-XTS and AES-CBC-ESSIV; `cryptsetup`-interoperable. |
 | [`apfs`](components/apfs.md) | backend | Read/write APFS FileVault 2 (little-endian); AES-XTS volume keys, AES-KW key wrapping, PBKDF2 / Argon2id; Apple-shape parity with `diskutil`. |
 | [`bitlocker`](components/bitlocker.md) | backend | Read-only BitLocker (Windows 7+, To Go): password, recovery password, `.BEK` startup key, clear key; AES-CBC ± Elephant and AES-XTS; equal to cryptsetup's `bitlkOpen` on Windows-made volumes. |
-| [`veracrypt`](components/veracrypt.md) | backend | Read-only VeraCrypt and TrueCrypt: AES, Camellia, Serpent, Twofish and six cascades, XTS; PBKDF2 (SHA-512, SHA-256, BLAKE2s, RIPEMD-160) and Argon2id; PIM, keyfiles, hidden volumes; 56 volumes from cryptsetup's corpus open and match. |
+| [`veracrypt`](components/veracrypt.md) | backend | Read-only VeraCrypt and TrueCrypt: every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); PBKDF2 (SHA-512, SHA-256, BLAKE2s, RIPEMD-160) and Argon2id; PIM, keyfiles, hidden volumes; 59 volumes from cryptsetup's corpus open and match. |
 | [`clear`](components/clear.md) | backend | Plaintext passthrough — forwards all I/O unencrypted so the dispatcher treats unencrypted devices uniformly. |
 
 ## Format detection
