@@ -32,7 +32,7 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 
 | | |
 |---|---|
-| Ciphers (XTS) | AES, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
+| Ciphers (XTS) | AES, Camellia, Serpent, Twofish; the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Serpent, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
 | KDFs | PBKDF2 with SHA-512, SHA-256, BLAKE2s-256 or RIPEMD-160; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy` |
 | Options | PIM, keyfiles (up to 1 MiB each), passwords up to 128 bytes |
 | Volumes | normal, hidden, backup headers; VeraCrypt and TrueCrypt 5.0 and later |
@@ -40,7 +40,7 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 **Not supported yet.** A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:
 
-- Camellia and Kuznyechik, and the cascades that use them
+- Kuznyechik, and the cascades that use it
   ([go-fde/fde#28](https://github.com/go-fde/fde/issues/28));
 - the Whirlpool and Streebog KDFs;
 - TrueCrypt's LRW and CBC modes, and headers older than version 3.
@@ -86,14 +86,17 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 `tests/tcrypt-compat-test`. The FAT file system inside must have the UUID
 that test checks.
 
-- 55 volumes open and match. They cover VeraCrypt and TrueCrypt, every
+- 56 volumes open and match. They cover VeraCrypt and TrueCrypt, every
   supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, AES,
-  Serpent and Twofish alone, and all five cascades of them.
-- The 35 volumes that use primitives not supported yet must be refused, not
+  Camellia, Serpent and Twofish alone, and the five cascades of AES,
+  Serpent and Twofish.
+- The 34 volumes that use primitives not supported yet must be refused, not
   misread.
 - Reversing the cascade's decryption order fails all 20 cascade volumes,
   so the order is checked. The same images confirm Serpent's byte order,
   of the two in circulation.
+- The corpus has no Camellia-Serpent volume. That cascade is checked only
+  by a round trip through the test writer, with cryptsetup's key offsets.
 
 The archive is GPL-2.0+, so CI fetches it pinned by commit and SHA-256
 instead of committing it.
@@ -122,6 +125,10 @@ runs one block at a time through
 bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
 than Botan on one core
 ([serpent#2](https://github.com/go-encryptions/serpent/issues/2)).
+Camellia runs through
+[go-encryptions/camellia](https://github.com/go-encryptions/camellia), pure
+Go. On one core it is level with Botan's scalar build and 1.12× faster than
+Botan's default build.
 
 ## References
 
