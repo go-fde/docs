@@ -123,8 +123,8 @@ cycles. The parsers are fuzzed in CI, with their corpora committed.
 Coverage is 100 % of statements, `-race` is clean, and CI runs amd64, arm64,
 s390x, fuzzing and `govulncheck`. The CFB reader is its own module,
 [go-filesystems/cfb](https://github.com/go-filesystems/cfb) (v0.1.0, moved
-unchanged from zed's `internal/cfb`, which v0.2.0 still contains; the release
-after v0.2.0 imports the module). Interoperability with real containers beyond
+unchanged from zed's former `internal/cfb`; zed imports it since v0.2.1).
+Interoperability with real containers beyond
 the two above (extracted byte for byte, a folder and a PNG each, with the
 per-file IV of `0200` archives) is not verified for: several files, ciphertext
 under 16 bytes, nested folders, several users, SHA-1, mode 103, 24- and 32-byte
