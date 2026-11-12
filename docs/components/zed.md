@@ -1,6 +1,6 @@
 # zed — Prim'X ZED! archives (read-only)
 
-`github.com/go-fde/zed` (v0.1.0) reads Prim'X ZED! encrypted archives
+`github.com/go-fde/zed` (v0.1.1) reads Prim'X ZED! encrypted archives
 (`.zed`) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no `Device` and the [`fde`](fde.md) dispatcher does
@@ -81,24 +81,25 @@ alphabet; the tests check what the bytes hold.
 The archive is untrusted input, so what it asks for is bounded and refused
 before the work is done (`DefaultLimits()`):
 
-- iterations: 10 000 000 for one user, 30 000 000 for all users together
-  (ZED! Free writes 100 000 and 200 000). The two do not fit together: one
-  user at 10 000 000 costs 10 000 000 + 3 × 10 000 000 = 40 000 000 and is
-  refused, so the real ceiling for one user with equal PBA and PBE counts is
-  about 7 500 000
-  ([go-fde/zed#4](https://github.com/go-fde/zed/issues/4), open);
+- iterations: 10 000 000 for one user, 40 000 000 for all users together
+  (ZED! Free writes 100 000 and 200 000). A user costs its PBA count plus
+  three times its PBE count, so one user at 10 000 000 costs 40 000 000 and
+  fits; when `MaxTotalIterations` is left zero it is four times
+  `MaxIterations`;
 - `pba_checksum` between 1 byte and one hash output, salts and the wrapped key
   at most 256 bytes;
 - 64 users, 100 000 entries nested at most 256 deep, paths of at most 4096
-  bytes, 64 MiB of metadata, 4 GiB per decompressed file;
+  bytes and 64 MiB of paths in all (`MaxTotalPathBytes`: paths are stored in
+  full, so 100 000 entries at the per-path cap would hold 400 MB), 64 MiB of
+  metadata, 4 GiB per decompressed file;
 - a file is read up to its declared size; a zlib bomb that inflates past it is
   refused with `ErrFormat`;
 - names containing `/`, `\`, `:` or NUL, and names that are exactly `.` or
-  `..`, are refused (`note.txt` is fine); so are the Windows reserved names
-  CON, PRN, AUX, NUL, COM1-9, LPT1-9 (with or without an extension), and two
-  entries with one path. CONIN$, CONOUT$, superscript COM/LPT digits and names
-  ending in a dot or a space still pass
-  ([go-fde/zed#5](https://github.com/go-fde/zed/issues/5), open).
+  `..`, are refused (`note.txt` is fine), on every OS, as are names ending in
+  a dot or a space and the Windows device names by the rules of Go's Windows
+  `filepath.IsLocal`: CON, PRN, AUX, NUL, COM1-9 and LPT1-9 (superscript
+  digits ¹ ² ³ included), CONIN$ and CONOUT$, with or without an extension;
+  two entries with one path are refused too.
 
 The CFB layer bounds every chain by the sectors the file can hold and refuses
 cycles. The parsers are fuzzed in CI, with their corpora committed.
