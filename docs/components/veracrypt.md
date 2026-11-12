@@ -33,15 +33,13 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 | | |
 |---|---|
 | Ciphers (XTS) | every XTS chain VeraCrypt offers: AES, Camellia, Kuznyechik, Serpent, Twofish, and the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Kuznyechik, Camellia-Serpent, Kuznyechik-AES, Kuznyechik-Serpent-Camellia, Kuznyechik-Twofish, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
-| KDFs | PBKDF2 with SHA-512, SHA-256, BLAKE2s-256 or RIPEMD-160; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy` |
+| KDFs | every non-boot KDF VeraCrypt and TrueCrypt use: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy` |
 | Options | PIM, keyfiles (up to 1 MiB each), passwords up to 128 bytes |
 | Volumes | normal, hidden, backup headers; VeraCrypt and TrueCrypt 5.0 and later |
 
 **Not supported yet.** A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:
 
-- the Whirlpool and Streebog KDFs
-  ([go-fde/fde#28](https://github.com/go-fde/fde/issues/28));
 - TrueCrypt's LRW and CBC modes, and headers older than version 3.
 
 **Refused** with `ErrUnsupported`: system encryption, and sector sizes
@@ -85,10 +83,11 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 `tests/tcrypt-compat-test`. The FAT file system inside must have the UUID
 that test checks.
 
-- 59 volumes open and match. They cover VeraCrypt and TrueCrypt, every
-  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, every
+- All 62 XTS volumes open and match (v0.5.0). They cover VeraCrypt and
+  TrueCrypt, SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool, Streebog-512
+  and Argon2id, PIM, keyfiles, a 72-byte password, hidden volumes, every
   cipher alone, and seven of the ten cascades.
-- The 31 volumes that use primitives not supported yet must be refused, not
+- The 28 LRW and CBC volumes (TrueCrypt before 5.0) must be refused, not
   misread.
 - Reversing the cascade's decryption order fails all 22 cascade volumes,
   so the order is checked. The same images confirm Serpent's and
