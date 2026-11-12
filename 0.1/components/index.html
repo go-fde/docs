@@ -573,6 +573,34 @@
   
   
     <li class="md-nav__item">
+      <a href="zed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    zed — Prim'X ZED! archives (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="clear/" class="md-nav__link">
         
   
@@ -698,7 +726,13 @@ format.</p>
 <td><a href="veracrypt/"><code>veracrypt</code></a></td>
 <td><code>github.com/go-fde/veracrypt</code></td>
 <td>backend</td>
-<td>VeraCrypt and TrueCrypt <strong>read-only</strong>, opened by name (the header is ciphertext); every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); PBKDF2 and Argon2id; PIM, keyfiles, hidden volumes; checked on 59 volumes from cryptsetup's corpus.</td>
+<td>VeraCrypt and TrueCrypt <strong>read-only</strong>, opened by name (the header is ciphertext); every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); every non-boot KDF (PBKDF2 with six hashes, Argon2id); PIM, keyfiles, hidden volumes; all 62 XTS volumes of cryptsetup's corpus open (v0.5.0), the 28 LRW/CBC ones are refused.</td>
+</tr>
+<tr>
+<td><a href="zed/"><code>zed</code></a></td>
+<td><code>github.com/go-fde/zed</code></td>
+<td>archive reader</td>
+<td>Prim'X ZED! <code>.zed</code> archives, <strong>read-only</strong>, password users (v0.1.0). Not a <code>Device</code> and not reachable through <code>fde</code>: it lists and reads the files of an encrypted archive. RSA users are not supported.</td>
 </tr>
 <tr>
 <td><a href="clear/"><code>clear</code></a></td>

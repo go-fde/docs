@@ -16,7 +16,7 @@
         <link rel="prev" href="../bitlocker/">
       
       
-        <link rel="next" href="../clear/">
+        <link rel="next" href="../zed/">
       
       
         
@@ -650,6 +650,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../zed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    zed — Prim'X ZED! archives (read-only)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../clear/" class="md-nav__link">
         
   
@@ -846,7 +874,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 </tr>
 <tr>
 <td>KDFs</td>
-<td>PBKDF2 with SHA-512, SHA-256, BLAKE2s-256 or RIPEMD-160; Argon2id; TrueCrypt's PBKDF2-SHA-1 with <code>Legacy</code></td>
+<td>every non-boot KDF VeraCrypt and TrueCrypt use: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with <code>Legacy</code></td>
 </tr>
 <tr>
 <td>Options</td>
@@ -861,8 +889,6 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 <p><strong>Not supported yet.</strong> A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:</p>
 <ul>
-<li>the Whirlpool and Streebog KDFs
-  (<a href="https://github.com/go-fde/fde/issues/28">go-fde/fde#28</a>);</li>
 <li>TrueCrypt's LRW and CBC modes, and headers older than version 3.</li>
 </ul>
 <p><strong>Refused</strong> with <code>ErrUnsupported</code>: system encryption, and sector sizes
@@ -900,10 +926,11 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 <code>tests/tcrypt-compat-test</code>. The FAT file system inside must have the UUID
 that test checks.</p>
 <ul>
-<li>59 volumes open and match. They cover VeraCrypt and TrueCrypt, every
-  supported KDF, PIM, keyfiles, a 72-byte password, hidden volumes, every
+<li>All 62 XTS volumes open and match (v0.5.0). They cover VeraCrypt and
+  TrueCrypt, SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool, Streebog-512
+  and Argon2id, PIM, keyfiles, a 72-byte password, hidden volumes, every
   cipher alone, and seven of the ten cascades.</li>
-<li>The 31 volumes that use primitives not supported yet must be refused, not
+<li>The 28 LRW and CBC volumes (TrueCrypt before 5.0) must be refused, not
   misread.</li>
 <li>Reversing the cascade's decryption order fails all 22 cascade volumes,
   so the order is checked. The same images confirm Serpent's and
