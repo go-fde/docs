@@ -33,16 +33,18 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 | | |
 |---|---|
 | Ciphers (XTS) | every XTS chain VeraCrypt offers: AES, Camellia, Kuznyechik, Serpent, Twofish, and the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Kuznyechik, Camellia-Serpent, Kuznyechik-AES, Kuznyechik-Serpent-Camellia, Kuznyechik-Twofish, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
-| KDFs | every non-boot KDF VeraCrypt and TrueCrypt use: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy` |
+| KDFs | every KDF cryptsetup's tcrypt tries: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy`; with `System`, also VeraCrypt's boot rows (SHA-256 and BLAKE2s-256 at 200,000 iterations, RIPEMD-160 at 327,661, PIM multiplier 2048); not VeraCrypt's Streebog boot row (200,000 iterations), which cryptsetup comments out too |
 | Options | PIM, keyfiles (up to 1 MiB each), passwords up to 128 bytes |
-| Volumes | normal, hidden, backup headers; VeraCrypt and TrueCrypt 5.0 and later |
+| Volumes | normal, hidden, backup headers; system encryption (`System`); VeraCrypt and TrueCrypt 5.0 and later |
 
 **Not supported yet.** A volume that uses these fails like a wrong
 password, because nothing on disk can tell the two apart:
 
 - TrueCrypt's LRW and CBC modes, and headers older than version 3.
 
-**Refused** with `ErrUnsupported`: system encryption, and sector sizes
+**Refused** with `ErrUnsupported`: a hidden operating system (a system
+header that records a hidden size), a system header opened without
+`System`, `System` combined with `Hidden` or `Backup`, and sector sizes
 other than 512 bytes.
 
 ## Usage
@@ -74,7 +76,31 @@ _, err = dev.ReadAt(boot, 0) // the filesystem's first sector
 ## Offsets
 
 `ReadAt` offsets are relative to the data area: offset 0 is the volume's
-file system. `Size()` is the volume size the header records.
+file system. `Size()` is the volume size the header records. For system
+encryption, see below.
+
+## System encryption
+
+`Options{System: true}` opens an encrypted boot drive or system partition,
+read-only. Give it the whole drive, or an image of it: the header is at
+byte 31744 of the drive, outside the encrypted area, so an image of the
+partition alone has no header to read. The header's system flag must be set
+(`ErrCorrupt` otherwise), as with cryptsetup's `--tcrypt-system`.
+
+`ReadAt(…, 0)` is the start of the **encrypted area**, which is
+`Header().MKOffset` on the drive, not the start of the disk. The area is
+`Header().VolumeSize` long.
+
+- Encrypted **partition**: offset 0 is the partition's first byte, so the
+  file system is at 0.
+- **Whole-drive** encryption: the area starts at sector 63 or later, in front
+  of the first partition, so a partition starting at sector `S` is at offset
+  `S*512 - MKOffset`. The MBR and the boot loader before the area are not
+  encrypted and are not part of the device.
+
+The XTS tweak of each sector is its sector number on the drive, as in
+cryptsetup's `iv_offset`. A system data area that overlaps the header at
+31744, lies outside the device or is off 512-byte sectors is `ErrCorrupt`.
 
 ## Interoperability
 
@@ -83,10 +109,14 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 `tests/tcrypt-compat-test`. The FAT file system inside must have the UUID
 that test checks.
 
-- All 62 XTS volumes open and match (v0.5.0). They cover VeraCrypt and
+- All 65 XTS volumes open and match (v0.6.1). They cover VeraCrypt and
   TrueCrypt, SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool, Streebog-512
   and Argon2id, PIM, keyfiles, a 72-byte password, hidden volumes, every
   cipher alone, and seven of the ten cascades.
+- Three of the 65 are system-encryption images (`sys_vc_1_mbr_full`,
+  `sys_vc_1_mbr_part` and `sys_vc_1_gpt_part`, up to 66 MiB), opened as
+  `--tcrypt-system` does, with the same FAT UUID. The first two use the
+  SHA-256 boot row, the GPT one SHA-512 at 500,000 iterations.
 - The 28 LRW and CBC volumes (TrueCrypt before 5.0) must be refused, not
   misread.
 - Reversing the cascade's decryption order fails all 22 cascade volumes,
@@ -107,21 +137,27 @@ instead of committing it.
   default). An open that would exceed them is refused with `ErrLimit` before
   any derivation.
 - Once decrypted, the header must pass both CRC-32s. Its data area must lie
-  inside the device and be sector-aligned.
+  inside the device and be sector-aligned; a system data area must not
+  overlap the header at 31744.
 - `FuzzParse` fuzzes those checks.
 
 ## Performance
 
 AES volumes decrypt through
 [go-encryptions/xts](https://github.com/go-encryptions/xts)
-`DecryptSectors`, which is ahead of OpenSSL on one core. Twofish runs one
-block at a time through `golang.org/x/crypto/twofish`. It has not been
-measured against a reference implementation yet
-([veracrypt#3](https://github.com/go-fde/veracrypt/issues/3)). Serpent
-runs one block at a time through
-[go-encryptions/serpent](https://github.com/go-encryptions/serpent),
-bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
-than Botan on one core
+`DecryptSectors`, which is ahead of OpenSSL on one core. Twofish goes
+through [go-encryptions/twofish](https://github.com/go-encryptions/twofish),
+four blocks at a time through xts's batch path: a Twofish-XTS 4 KiB read
+runs at about 611 MiB/s on one Apple M4 Max core, against 486 MiB/s for
+Botan 3.14.1's own Twofish/XTS and about 133 MiB/s with the former
+`golang.org/x/crypto/twofish`
+([veracrypt#3](https://github.com/go-fde/veracrypt/issues/3), closed).
+Serpent goes through
+[go-encryptions/serpent](https://github.com/go-encryptions/serpent) v0.2.0,
+bitsliced pure Go. veracrypt v0.6.1 reads Serpent-XTS at about 289 MiB/s,
+against 127 MiB/s before (+127 %). Serpent's batch path is level with
+Botan's NEON for decryption and 1.28× faster for encryption; amd64 is not
+measured
 ([serpent#2](https://github.com/go-encryptions/serpent/issues/2)).
 Camellia runs through
 [go-encryptions/camellia](https://github.com/go-encryptions/camellia), pure
