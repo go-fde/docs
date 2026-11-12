@@ -816,7 +816,7 @@
 
 
 <h1 id="zed-primx-zed-archives-read-only">zed — Prim'X ZED! archives (read-only)</h1>
-<p><code>github.com/go-fde/zed</code> (v0.1.1) reads Prim'X ZED! encrypted archives
+<p><code>github.com/go-fde/zed</code> (v0.2.0) reads Prim'X ZED! encrypted archives
 (<code>.zed</code>) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no <code>Device</code> and the <a href="../fde/"><code>fde</code></a> dispatcher does
@@ -848,8 +848,10 @@ reader, and <code>WithLimits</code> replaces the default limits.</p>
   entry.</li>
 </ul>
 <p>It was checked against every test vector of the 2017 format document, and
-against one container made by ZED! Free 2024.4. That container holds no file,
-so the file-stream path is verified by the 2017 vectors only.</p>
+against one container made by ZED! Free 2024.4, whose extraction is verified
+byte for byte on a real container: a folder holding a PNG screen capture
+(11 508 bytes) comes out identical to the original, through the whole
+file-stream path (stream name, 512-byte chunks, CTS, zlib).</p>
 <h2 id="what-it-refuses-or-leaves-out">What it refuses or leaves out</h2>
 <ul>
 <li><strong>RSA users</strong> (certificate or token): not supported. An archive with a
@@ -886,7 +888,7 @@ so the file-stream path is verified by the 2017 vectors only.</p>
 </tr>
 <tr>
 <td>One stream per file</td>
-<td>zlib data in 512-byte chunks, each AES-CBC with an IV derived from the chunk number. The stream name is the shuffled <code>file_id</code> in hex.</td>
+<td>zlib data in 512-byte chunks, each AES-CBC with an IV derived from the chunk number and the file's IV (see the next section). The stream name is the shuffled <code>file_id</code> in hex.</td>
 </tr>
 </tbody>
 </table>
@@ -901,6 +903,10 @@ ZED! Free 2024.4 showed these differences:</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>A file's name and chunks use the global <code>files_iv</code> ("the same key and IV")</td>
+<td>The IV of a file is <code>files_iv</code> XOR the file's raw <code>file_id</code>; the chunk IV is then <code>AES-ECB(key, LE16(chunk) XOR that IV)</code>. Applied to archives whose version bytes are <code>0200</code> (zed v0.2.0); <code>0100</code> archives keep the global IV, which rests on the 2017 vectors, not on a real <code>0100</code> file. Found on the real container: a wrong CBC IV garbles exactly the first block of each name.</td>
+</tr>
 <tr>
 <td><code>_ctlfile</code> is property index 3, <code>_catalog</code> index 4</td>
 <td>The dictionary names <code>_ctlfile</code> = 4, <code>_catalog</code> = 5, and a third blob <code>_seal</code> = 6. Names are resolved through the dictionary; 3 and 4 are only a fallback.</td>
@@ -964,7 +970,8 @@ cycles. The parsers are fuzzed in CI, with their corpora committed.</p>
 s390x, fuzzing and <code>govulncheck</code>. The CFB reader lives in the module as
 <code>internal/cfb</code> for now; it was meant for a <code>go-office/cfb</code> repository, which
 could not be created. Interoperability with real containers beyond the one
-above (files, directories, several users, SHA-1, mode 103) is not verified.
+above (several files, nested folders, several users, SHA-1, mode 103, any
+<code>0100</code> archive) is not verified.
 Benchmark timings against a reference extractor were not taken: none could be
 run.</p>
 <h2 id="credit-and-references">Credit and references</h2>
