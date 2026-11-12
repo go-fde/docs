@@ -753,7 +753,7 @@ QCOW2 virtual disk.</p>
 <tr>
 <td><a href="components/veracrypt/"><code>veracrypt</code></a></td>
 <td>backend</td>
-<td>Read-only VeraCrypt and TrueCrypt: every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); every non-boot KDF (PBKDF2 with SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool or Streebog-512) and Argon2id; PIM, keyfiles, hidden volumes; all 62 XTS volumes from cryptsetup's corpus open and match (the 28 LRW/CBC ones are refused).</td>
+<td>Read-only VeraCrypt and TrueCrypt: every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); every KDF cryptsetup's tcrypt tries (PBKDF2 with SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool or Streebog-512, Argon2id, and the SHA-256, BLAKE2s and RIPEMD-160 boot rows; not the Streebog boot row); PIM, keyfiles, hidden volumes, system encryption; all 65 XTS volumes from cryptsetup's corpus open and match (the 28 LRW/CBC ones are refused).</td>
 </tr>
 <tr>
 <td><a href="components/zed/"><code>zed</code></a></td>

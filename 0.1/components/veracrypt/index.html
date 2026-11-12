@@ -591,6 +591,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#system-encryption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System encryption
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interoperability" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -777,6 +788,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#system-encryption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System encryption
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interoperability" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -874,7 +896,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 </tr>
 <tr>
 <td>KDFs</td>
-<td>every non-boot KDF VeraCrypt and TrueCrypt use: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with <code>Legacy</code></td>
+<td>every KDF cryptsetup's tcrypt tries: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with <code>Legacy</code>; with <code>System</code>, also VeraCrypt's boot rows (SHA-256 and BLAKE2s-256 at 200,000 iterations, RIPEMD-160 at 327,661, PIM multiplier 2048); not VeraCrypt's Streebog boot row (200,000 iterations), which cryptsetup comments out too</td>
 </tr>
 <tr>
 <td>Options</td>
@@ -882,7 +904,7 @@ seconds. Naming the KDF and the cipher in <code>Options</code> skips the others.
 </tr>
 <tr>
 <td>Volumes</td>
-<td>normal, hidden, backup headers; VeraCrypt and TrueCrypt 5.0 and later</td>
+<td>normal, hidden, backup headers; system encryption (<code>System</code>); VeraCrypt and TrueCrypt 5.0 and later</td>
 </tr>
 </tbody>
 </table>
@@ -891,7 +913,9 @@ password, because nothing on disk can tell the two apart:</p>
 <ul>
 <li>TrueCrypt's LRW and CBC modes, and headers older than version 3.</li>
 </ul>
-<p><strong>Refused</strong> with <code>ErrUnsupported</code>: system encryption, and sector sizes
+<p><strong>Refused</strong> with <code>ErrUnsupported</code>: a hidden operating system (a system
+header that records a hidden size), a system header opened without
+<code>System</code>, <code>System</code> combined with <code>Hidden</code> or <code>Backup</code>, and sector sizes
 other than 512 bytes.</p>
 <h2 id="usage">Usage</h2>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">"github.com/go-fde/veracrypt"</span>
@@ -919,17 +943,42 @@ other than 512 bytes.</p>
 </ul>
 <h2 id="offsets">Offsets</h2>
 <p><code>ReadAt</code> offsets are relative to the data area: offset 0 is the volume's
-file system. <code>Size()</code> is the volume size the header records.</p>
+file system. <code>Size()</code> is the volume size the header records. For system
+encryption, see below.</p>
+<h2 id="system-encryption">System encryption</h2>
+<p><code>Options{System: true}</code> opens an encrypted boot drive or system partition,
+read-only. Give it the whole drive, or an image of it: the header is at
+byte 31744 of the drive, outside the encrypted area, so an image of the
+partition alone has no header to read. The header's system flag must be set
+(<code>ErrCorrupt</code> otherwise), as with cryptsetup's <code>--tcrypt-system</code>.</p>
+<p><code>ReadAt(…, 0)</code> is the start of the <strong>encrypted area</strong>, which is
+<code>Header().MKOffset</code> on the drive, not the start of the disk. The area is
+<code>Header().VolumeSize</code> long.</p>
+<ul>
+<li>Encrypted <strong>partition</strong>: offset 0 is the partition's first byte, so the
+  file system is at 0.</li>
+<li><strong>Whole-drive</strong> encryption: the area starts at sector 63 or later, in front
+  of the first partition, so a partition starting at sector <code>S</code> is at offset
+  <code>S*512 - MKOffset</code>. The MBR and the boot loader before the area are not
+  encrypted and are not part of the device.</li>
+</ul>
+<p>The XTS tweak of each sector is its sector number on the drive, as in
+cryptsetup's <code>iv_offset</code>. A system data area that overlaps the header at
+31744, lies outside the device or is off 512-byte sectors is <code>ErrCorrupt</code>.</p>
 <h2 id="interoperability">Interoperability</h2>
 <p>The tests open the images in cryptsetup's <code>tests/tcrypt-images.tar.xz</code>,
 which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 <code>tests/tcrypt-compat-test</code>. The FAT file system inside must have the UUID
 that test checks.</p>
 <ul>
-<li>All 62 XTS volumes open and match (v0.5.0). They cover VeraCrypt and
+<li>All 65 XTS volumes open and match (v0.6.1). They cover VeraCrypt and
   TrueCrypt, SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool, Streebog-512
   and Argon2id, PIM, keyfiles, a 72-byte password, hidden volumes, every
   cipher alone, and seven of the ten cascades.</li>
+<li>Three of the 65 are system-encryption images (<code>sys_vc_1_mbr_full</code>,
+  <code>sys_vc_1_mbr_part</code> and <code>sys_vc_1_gpt_part</code>, up to 66 MiB), opened as
+  <code>--tcrypt-system</code> does, with the same FAT UUID. The first two use the
+  SHA-256 boot row, the GPT one SHA-512 at 500,000 iterations.</li>
 <li>The 28 LRW and CBC volumes (TrueCrypt before 5.0) must be refused, not
   misread.</li>
 <li>Reversing the cascade's decryption order fails all 22 cascade volumes,
@@ -949,20 +998,26 @@ instead of committing it.</p>
   default). An open that would exceed them is refused with <code>ErrLimit</code> before
   any derivation.</li>
 <li>Once decrypted, the header must pass both CRC-32s. Its data area must lie
-  inside the device and be sector-aligned.</li>
+  inside the device and be sector-aligned; a system data area must not
+  overlap the header at 31744.</li>
 <li><code>FuzzParse</code> fuzzes those checks.</li>
 </ul>
 <h2 id="performance">Performance</h2>
 <p>AES volumes decrypt through
 <a href="https://github.com/go-encryptions/xts">go-encryptions/xts</a>
-<code>DecryptSectors</code>, which is ahead of OpenSSL on one core. Twofish runs one
-block at a time through <code>golang.org/x/crypto/twofish</code>. It has not been
-measured against a reference implementation yet
-(<a href="https://github.com/go-fde/veracrypt/issues/3">veracrypt#3</a>). Serpent
-runs one block at a time through
-<a href="https://github.com/go-encryptions/serpent">go-encryptions/serpent</a>,
-bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
-than Botan on one core
+<code>DecryptSectors</code>, which is ahead of OpenSSL on one core. Twofish goes
+through <a href="https://github.com/go-encryptions/twofish">go-encryptions/twofish</a>,
+four blocks at a time through xts's batch path: a Twofish-XTS 4 KiB read
+runs at about 611 MiB/s on one Apple M4 Max core, against 486 MiB/s for
+Botan 3.14.1's own Twofish/XTS and about 133 MiB/s with the former
+<code>golang.org/x/crypto/twofish</code>
+(<a href="https://github.com/go-fde/veracrypt/issues/3">veracrypt#3</a>, closed).
+Serpent goes through
+<a href="https://github.com/go-encryptions/serpent">go-encryptions/serpent</a> v0.2.0,
+bitsliced pure Go. veracrypt v0.6.1 reads Serpent-XTS at about 289 MiB/s,
+against 127 MiB/s before (+127 %). Serpent's batch path is level with
+Botan's NEON for decryption and 1.28× faster for encryption; amd64 is not
+measured
 (<a href="https://github.com/go-encryptions/serpent/issues/2">serpent#2</a>).
 Camellia runs through
 <a href="https://github.com/go-encryptions/camellia">go-encryptions/camellia</a>, pure
