@@ -872,7 +872,7 @@ file-stream path (stream name, 512-byte chunks, CTS, zlib).</p>
 <tbody>
 <tr>
 <td>MS-CFB container</td>
-<td>The file system of the archive (an internal reader: v3 and v4 sectors, FAT, DIFAT, mini stream).</td>
+<td>The file system of the archive (read by <a href="https://github.com/go-filesystems/cfb">go-filesystems/cfb</a>: v3 and v4 sectors, FAT, DIFAT, mini stream).</td>
 </tr>
 <tr>
 <td>Metadata stream <code>\x055haaaaqaIekzeecnWj31zxh0Nc</code></td>
@@ -967,11 +967,13 @@ before the work is done (<code>DefaultLimits()</code>):</p>
 cycles. The parsers are fuzzed in CI, with their corpora committed.</p>
 <h2 id="tests-and-status">Tests and status</h2>
 <p>Coverage is 100 % of statements, <code>-race</code> is clean, and CI runs amd64, arm64,
-s390x, fuzzing and <code>govulncheck</code>. The CFB reader lives in the module as
-<code>internal/cfb</code> for now; it was meant for a <code>go-office/cfb</code> repository, which
-could not be created. Interoperability with real containers beyond the one
-above (several files, nested folders, several users, SHA-1, mode 103, any
-<code>0100</code> archive) is not verified.
+s390x, fuzzing and <code>govulncheck</code>. The CFB reader is its own module,
+<a href="https://github.com/go-filesystems/cfb">go-filesystems/cfb</a> (v0.1.0, moved
+unchanged from zed's <code>internal/cfb</code>, which v0.2.0 still contains; the release
+after v0.2.0 imports the module). Interoperability with real containers beyond
+the one above is not verified for: several files, ciphertext under 16 bytes,
+nested folders, several users, SHA-1, mode 103, 24- and 32-byte keys, and any
+<code>0100</code> archive.
 Benchmark timings against a reference extractor were not taken: none could be
 run.</p>
 <h2 id="credit-and-references">Credit and references</h2>
