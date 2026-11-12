@@ -1,6 +1,6 @@
 # zed — Prim'X ZED! archives (read-only)
 
-`github.com/go-fde/zed` (v0.2.0) reads Prim'X ZED! encrypted archives
+`github.com/go-fde/zed` (v0.2.1) reads Prim'X ZED! encrypted archives
 (`.zed`) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no `Device` and the [`fde`](fde.md) dispatcher does
@@ -114,7 +114,7 @@ s390x, fuzzing and `govulncheck`. The CFB reader is its own module,
 [go-filesystems/cfb](https://github.com/go-filesystems/cfb) (v0.1.0, moved
 unchanged from zed's `internal/cfb`, which v0.2.0 still contains; the release
 after v0.2.0 imports the module). Interoperability with real containers beyond
-the one above is not verified for: several files, ciphertext under 16 bytes,
+the one above is not verified for (zed v0.2.1 extracts that container's files, a folder and a PNG, byte for byte against the original, and handles the per-file IV of `0200` archives): several files, ciphertext under 16 bytes,
 nested folders, several users, SHA-1, mode 103, 24- and 32-byte keys, and any
 `0100` archive.
 Benchmark timings against a reference extractor were not taken: none could be

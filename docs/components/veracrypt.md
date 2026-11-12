@@ -33,7 +33,7 @@ Because the header cannot be recognised, the [`fde`](fde.md) dispatcher's
 | | |
 |---|---|
 | Ciphers (XTS) | every XTS chain VeraCrypt offers: AES, Camellia, Kuznyechik, Serpent, Twofish, and the cascades AES-Twofish, AES-Twofish-Serpent, Camellia-Kuznyechik, Camellia-Serpent, Kuznyechik-AES, Kuznyechik-Serpent-Camellia, Kuznyechik-Twofish, Serpent-AES, Serpent-Twofish-AES, Twofish-Serpent |
-| KDFs | every KDF VeraCrypt and TrueCrypt use: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy`; with `System`, also VeraCrypt's boot rows (SHA-256 and BLAKE2s-256 at 200,000 iterations, RIPEMD-160 at 327,661, PIM multiplier 2048) |
+| KDFs | every KDF cryptsetup's tcrypt tries: PBKDF2 with SHA-512, SHA-256, BLAKE2s-256, RIPEMD-160, Whirlpool or Streebog-512; Argon2id; TrueCrypt's PBKDF2-SHA-1 with `Legacy`; with `System`, also VeraCrypt's boot rows (SHA-256 and BLAKE2s-256 at 200,000 iterations, RIPEMD-160 at 327,661, PIM multiplier 2048); not VeraCrypt's Streebog boot row (200,000 iterations), which cryptsetup comments out too |
 | Options | PIM, keyfiles (up to 1 MiB each), passwords up to 128 bytes |
 | Volumes | normal, hidden, backup headers; system encryption (`System`); VeraCrypt and TrueCrypt 5.0 and later |
 
@@ -109,7 +109,7 @@ which VeraCrypt and TrueCrypt made, with the passwords, PIMs and keyfiles of
 `tests/tcrypt-compat-test`. The FAT file system inside must have the UUID
 that test checks.
 
-- All 65 XTS volumes open and match (v0.6.0). They cover VeraCrypt and
+- All 65 XTS volumes open and match (v0.6.1). They cover VeraCrypt and
   TrueCrypt, SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool, Streebog-512
   and Argon2id, PIM, keyfiles, a 72-byte password, hidden volumes, every
   cipher alone, and seven of the ten cascades.
@@ -149,10 +149,12 @@ AES volumes decrypt through
 block at a time through `golang.org/x/crypto/twofish`. It has not been
 measured against a reference implementation yet
 ([veracrypt#3](https://github.com/go-fde/veracrypt/issues/3)). Serpent
-runs one block at a time through
-[go-encryptions/serpent](https://github.com/go-encryptions/serpent),
-bitsliced pure Go. It is 2.1× (encryption) and 2.5× (decryption) slower
-than Botan on one core
+goes through
+[go-encryptions/serpent](https://github.com/go-encryptions/serpent) v0.2.0,
+bitsliced pure Go. veracrypt v0.6.1 reads Serpent-XTS at about 289 MiB/s,
+against 127 MiB/s before (+127 %). Serpent's batch path is level with
+Botan's NEON for decryption and 1.28× faster for encryption; amd64 is not
+measured
 ([serpent#2](https://github.com/go-encryptions/serpent/issues/2)).
 Camellia runs through
 [go-encryptions/camellia](https://github.com/go-encryptions/camellia), pure
