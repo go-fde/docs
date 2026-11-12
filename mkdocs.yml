@@ -44,4 +44,5 @@ nav:
       - "apfs — APFS FileVault 2": components/apfs.md
       - "bitlocker — BitLocker (read-only)": components/bitlocker.md
       - "veracrypt — VeraCrypt and TrueCrypt (read-only)": components/veracrypt.md
+      - "zed — Prim'X ZED! archives (read-only)": components/zed.md
       - "clear — plaintext passthrough": components/clear.md
