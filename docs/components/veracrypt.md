@@ -145,11 +145,14 @@ instead of committing it.
 
 AES volumes decrypt through
 [go-encryptions/xts](https://github.com/go-encryptions/xts)
-`DecryptSectors`, which is ahead of OpenSSL on one core. Twofish runs one
-block at a time through `golang.org/x/crypto/twofish`. It has not been
-measured against a reference implementation yet
-([veracrypt#3](https://github.com/go-fde/veracrypt/issues/3)). Serpent
-goes through
+`DecryptSectors`, which is ahead of OpenSSL on one core. Twofish goes
+through [go-encryptions/twofish](https://github.com/go-encryptions/twofish),
+four blocks at a time through xts's batch path: a Twofish-XTS 4 KiB read
+runs at about 611 MiB/s on one Apple M4 Max core, against 486 MiB/s for
+Botan 3.14.1's own Twofish/XTS and about 133 MiB/s with the former
+`golang.org/x/crypto/twofish`
+([veracrypt#3](https://github.com/go-fde/veracrypt/issues/3), closed).
+Serpent goes through
 [go-encryptions/serpent](https://github.com/go-encryptions/serpent) v0.2.0,
 bitsliced pure Go. veracrypt v0.6.1 reads Serpent-XTS at about 289 MiB/s,
 against 127 MiB/s before (+127 %). Serpent's batch path is level with
