@@ -608,10 +608,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-the-2017-document-differs-from-zed-free-20244" class="md-nav__link">
+  <a href="#where-the-2017-document-differs-from-zed-free-20244-and-20263" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where the 2017 document differs from ZED! Free 2024.4
+        Where the 2017 document differs from ZED! Free 2024.4 and 2026.3
       
     </span>
   </a>
@@ -755,10 +755,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-the-2017-document-differs-from-zed-free-20244" class="md-nav__link">
+  <a href="#where-the-2017-document-differs-from-zed-free-20244-and-20263" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where the 2017 document differs from ZED! Free 2024.4
+        Where the 2017 document differs from ZED! Free 2024.4 and 2026.3
       
     </span>
   </a>
@@ -816,7 +816,7 @@
 
 
 <h1 id="zed-primx-zed-archives-read-only">zed — Prim'X ZED! archives (read-only)</h1>
-<p><code>github.com/go-fde/zed</code> (v0.2.1) reads Prim'X ZED! encrypted archives
+<p><code>github.com/go-fde/zed</code> (v0.3.0) reads Prim'X ZED! encrypted archives
 (<code>.zed</code>) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no <code>Device</code> and the <a href="../fde/"><code>fde</code></a> dispatcher does
@@ -839,8 +839,12 @@ reader, and <code>WithLimits</code> replaces the default limits.</p>
 <h2 id="what-it-reads">What it reads</h2>
 <ul>
 <li>Password users: PKCS#12 key derivation (RFC 7292 appendix B) with SHA-1 or
-  SHA-256. The password check (PBA) and the key and IV derivation (PBE) unwrap
-  the archive key.</li>
+  SHA-256 (<code>pkcs12_hashfunc</code> 21 and 22), or, for ZED! Free 2026.3 containers,
+  <code>pkcs12_hashfunc</code> 43, which is PBKDF2-HMAC-SHA-512 with the password in
+  UTF-8: the password check (PBA) is the first 8 bytes of the derivation, and
+  the key and IV derivation (PBE) is one derivation whose first
+  <code>encryption_strength</code> bytes are the key and the next 16 bytes the IV. PBA
+  and PBE unwrap the archive key.</li>
 <li>AES-128, AES-192 and AES-256 in the two end-of-stream modes of the format,
   <code>STREAM</code> (mode 103) and <code>CTS</code> (mode 104, CBC-CS3), for file names and for
   the 512-byte chunks of file streams.</li>
@@ -848,10 +852,10 @@ reader, and <code>WithLimits</code> replaces the default limits.</p>
   entry.</li>
 </ul>
 <p>It was checked against every test vector of the 2017 format document, and
-against one container made by ZED! Free 2024.4, whose extraction is verified
-byte for byte on a real container: a folder holding a PNG screen capture
-(11 508 bytes) comes out identical to the original, through the whole
-file-stream path (stream name, 512-byte chunks, CTS, zlib).</p>
+against two real containers, one made by ZED! Free 2024.4 and one by ZED!
+Free 2026.3. Both are extracted byte for byte: a folder holding a PNG
+screen capture (11 508 bytes) comes out identical to the original from each,
+through the whole file-stream path (stream name, 512-byte chunks, CTS, zlib).</p>
 <h2 id="what-it-refuses-or-leaves-out">What it refuses or leaves out</h2>
 <ul>
 <li><strong>RSA users</strong> (certificate or token): not supported. An archive with a
@@ -892,17 +896,26 @@ file-stream path (stream name, 512-byte chunks, CTS, zlib).</p>
 </tr>
 </tbody>
 </table>
-<h2 id="where-the-2017-document-differs-from-zed-free-20244">Where the 2017 document differs from ZED! Free 2024.4</h2>
+<h2 id="where-the-2017-document-differs-from-zed-free-20244-and-20263">Where the 2017 document differs from ZED! Free 2024.4 and 2026.3</h2>
 <p>The format is documented in Sylvain Beucler's 2017 note. One container made by
-ZED! Free 2024.4 showed these differences:</p>
+ZED! Free 2024.4 and one by 2026.3 showed these differences (a row is for both
+unless it names a version):</p>
 <table>
 <thead>
 <tr>
 <th>2017 document</th>
-<th>ZED! Free 2024.4</th>
+<th>ZED! Free 2024.4 and 2026.3</th>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>pkcs12_hashfunc</code> is 21 (SHA-1) or 22 (SHA-256)</td>
+<td><strong>2026.3 writes 43</strong>: PBKDF2-HMAC-SHA-512 with the password in UTF-8, not PKCS#12 with UTF-16BE. PBA is its first 8 bytes; PBE is one derivation of <code>encryption_strength + 16</code> bytes, the key then the 16-byte IV. Found by trying hash families and password encodings against <code>pba_checksum</code>. The IV position for 24- and 32-byte keys (right after the key) is inferred, not seen on a real container.</td>
+</tr>
+<tr>
+<td>Created with <code>{00000188-1000-3CA8-8868-36F59DEFD14D}</code> (Zed! Free 1.0.188)</td>
+<td>2024.4: <code>{00000018-A040-3CA8-8868-36F59DEFD14D}</code>; 2026.3: <code>{00000006-B030-3CA8-8868-36F59DEFD14D}</code></td>
+</tr>
 <tr>
 <td>A file's name and chunks use the global <code>files_iv</code> ("the same key and IV")</td>
 <td>The IV of a file is <code>files_iv</code> XOR the file's raw <code>file_id</code>; the chunk IV is then <code>AES-ECB(key, LE16(chunk) XOR that IV)</code>. Applied to archives whose version bytes are <code>0200</code> (zed v0.2.0); <code>0100</code> archives keep the global IV, which rests on the 2017 vectors, not on a real <code>0100</code> file. Found on the real container: a wrong CBC IV garbles exactly the first block of each name.</td>
@@ -916,16 +929,12 @@ ZED! Free 2024.4 showed these differences:</p>
 <td><code>0200</code> (the TLV layout reads the same).</td>
 </tr>
 <tr>
-<td>Created with <code>{00000188-1000-3CA8-8868-36F59DEFD14D}</code></td>
-<td><code>{00000018-A040-3CA8-8868-36F59DEFD14D}</code></td>
-</tr>
-<tr>
 <td>Mode 103 or 104, key 16 or 32 bytes</td>
 <td>Mode 104, 16 bytes.</td>
 </tr>
 <tr>
 <td><code>pba_iter</code> typically 200000, <code>pbe_iter</code> 100000</td>
-<td>Both 200000, with SHA-256.</td>
+<td>2024.4: both 200000, with SHA-256. 2026.3: <code>pba_iter</code> 200000, <code>pbe_iter</code> 100000, with hash 43.</td>
 </tr>
 <tr>
 <td>Items listed in the TLV tables</td>
@@ -943,10 +952,15 @@ alphabet; the tests check what the bytes hold.</p>
 <p>The archive is untrusted input, so what it asks for is bounded and refused
 before the work is done (<code>DefaultLimits()</code>):</p>
 <ul>
-<li>iterations: 10 000 000 for one user, 40 000 000 for all users together
-  (ZED! Free writes 100 000 and 200 000). A user costs its PBA count plus
-  three times its PBE count, so one user at 10 000 000 costs 40 000 000 and
-  fits; when <code>MaxTotalIterations</code> is left zero it is four times
+<li>key derivation work, counted in PKCS#12 SHA-256 rounds: 10 000 000 for one
+  user and 40 000 000 for all users together (ZED! Free writes 100 000 and
+  200 000 iterations). One PBKDF2-HMAC-SHA-512 iteration (hash 43) counts as 5
+  rounds, measured at 225.3 ns against 46.4 ns for a PKCS#12 SHA-256 round on
+  one core (ratio 4.86); each scheme is counted as it derives (PKCS#12: the
+  check, then key and IV in two passes, three with SHA-1; PBKDF2: one pass).
+  At the defaults a hostile header costs at most about 1.9 s of derivation on
+  one core, whichever hash it names, and is refused before anything is
+  derived. When <code>MaxTotalIterations</code> is left zero it is four times
   <code>MaxIterations</code>;</li>
 <li><code>pba_checksum</code> between 1 byte and one hash output, salts and the wrapped key
   at most 256 bytes;</li>
@@ -969,11 +983,13 @@ cycles. The parsers are fuzzed in CI, with their corpora committed.</p>
 <p>Coverage is 100 % of statements, <code>-race</code> is clean, and CI runs amd64, arm64,
 s390x, fuzzing and <code>govulncheck</code>. The CFB reader is its own module,
 <a href="https://github.com/go-filesystems/cfb">go-filesystems/cfb</a> (v0.1.0, moved
-unchanged from zed's <code>internal/cfb</code>, which v0.2.0 still contains; the release
-after v0.2.0 imports the module). Interoperability with real containers beyond
-the one above is not verified for (zed v0.2.1 extracts that container's files, a folder and a PNG, byte for byte against the original, and handles the per-file IV of <code>0200</code> archives): several files, ciphertext under 16 bytes,
-nested folders, several users, SHA-1, mode 103, 24- and 32-byte keys, and any
-<code>0100</code> archive.
+unchanged from zed's former <code>internal/cfb</code>; zed imports it since v0.2.1).
+Interoperability with real containers beyond
+the two above (extracted byte for byte, a folder and a PNG each, with the
+per-file IV of <code>0200</code> archives) is not verified for: several files, ciphertext
+under 16 bytes, nested folders, several users, SHA-1, mode 103, 24- and 32-byte
+keys (for hash 43 the IV placement after the key is inferred), other
+<code>pkcs12_hashfunc</code> values than 21, 22 and 43, and any <code>0100</code> archive.
 Benchmark timings against a reference extractor were not taken: none could be
 run.</p>
 <h2 id="credit-and-references">Credit and references</h2>
