@@ -1,10 +1,20 @@
-# zed — Prim'X ZED! archives (read-only)
+# zed — Prim'X ZED! archives (read; write is experimental)
 
-`github.com/go-fde/zed` (v0.3.0) reads Prim'X ZED! encrypted archives
+`github.com/go-fde/zed` (v0.4.0) reads Prim'X ZED! encrypted archives
 (`.zed`) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no `Device` and the [`fde`](fde.md) dispatcher does
 not open it.
+
+**Writing is experimental (v0.4.0).** `zed.Create` writes new archives that
+this package reads back, but **ZED! Free 2026.3.6 opens them only after a
+"Corrupted encrypted container!" warning** (then read only): the global seal
+hash and the per-file seal values are not reproduced (the three seal HMACs
+are). AES-256 archives are refused by ZEDFREE with `[807A0103]`; a file
+extracted through the ZED! interface was not tested. Details, the tested
+table and what was tried: [issue #21](https://github.com/go-fde/zed/issues/21).
+The `cmd/zedgui` tool drives ZEDFREE.app through the macOS Accessibility API to
+test an archive without a person.
 
 ```go
 a, err := zed.OpenFile("archive.zed", password)
@@ -50,9 +60,9 @@ through the whole file-stream path (stream name, 512-byte chunks, CTS, zlib).
 - **RSA users** (certificate or token): not supported. An archive with a
   password user still opens with that password; an archive with none returns
   `ErrUnsupported`.
-- **Writing**: not implemented.
+- **Writing**: experimental (see above); no existing archive is modified.
 - The optional streams (the background picture, the seal) and the on-the-fly
-  folder variant: ignored.
+  folder variant: ignored when reading.
 
 ## The format
 
