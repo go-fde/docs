@@ -816,23 +816,22 @@
 
 
 <h1 id="zed-primx-zed-archives-read-write-is-experimental">zed — Prim'X ZED! archives (read; write is experimental)</h1>
-<p><code>github.com/go-fde/zed</code> (v0.5.0) reads Prim'X ZED! encrypted archives
+<p><code>github.com/go-fde/zed</code> (v0.5.1) reads Prim'X ZED! encrypted archives
 (<code>.zed</code>) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no <code>Device</code> and the <a href="../fde/"><code>fde</code></a> dispatcher does
 not open it.</p>
-<p><strong>Writing is experimental (v0.5.0).</strong> <code>zed.Create</code> writes new archives that
-this package reads back, and <strong>ZED! Free 2026.3.6 opens an AES-128 archive
-written with the default full seal without any warning</strong> (checked with
+<p><strong>Writing is experimental (v0.5.1).</strong> <code>zed.Create</code> writes new archives that
+this package reads back, and <strong>ZED! Free 2026.3.6 opens an AES-128 or AES-256
+archive written with the default full seal without any warning</strong> (checked with
 <code>cmd/zedgui</code>): the seal stream's global hash and the per-file values are
-computed. The options without a full seal (<code>SealNone</code>, <code>SealPropertyOnly</code>)
-give archives ZEDFREE warns about or refuses. AES-256 archives are refused by
-ZEDFREE with <code>[807A0103]</code>; a file extracted through the ZED! interface was not
-tested. The seal algorithms, found for interoperability (Directive 2009/24/EC
-art. 6), are in the
-<a href="https://github.com/go-fde/zed#writing-new-archives-experimental">README</a>;
-the open AES-256 question is
-<a href="https://github.com/go-fde/zed/issues/21">issue #21</a>.
+computed, and the seal key is as long as the archive key (a shorter one made
+ZEDFREE refuse AES-256 with <code>[807A0103]</code> before v0.5.1). The options without a
+full seal (<code>SealNone</code>, <code>SealPropertyOnly</code>) give archives ZEDFREE warns about or
+refuses. A file extracted through the ZED! interface was not tested. The seal
+algorithms, found for interoperability (Directive 2009/24/EC art. 6), are in
+the <a href="https://github.com/go-fde/zed#writing-new-archives-experimental">README</a>;
+history: <a href="https://github.com/go-fde/zed/issues/21">issue #21</a>.
 The <code>cmd/zedgui</code> tool drives ZEDFREE.app through the macOS Accessibility API to
 test an archive without a person.</p>
 <div class="highlight"><pre><span></span><code><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">zed</span><span class="p">.</span><span class="nx">OpenFile</span><span class="p">(</span><span class="s">"archive.zed"</span><span class="p">,</span><span class="w"> </span><span class="nx">password</span><span class="p">)</span>
