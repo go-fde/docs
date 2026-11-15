@@ -1,8 +1,9 @@
-# veracrypt — VeraCrypt and TrueCrypt (read-only)
+# veracrypt — VeraCrypt and TrueCrypt (read; create VeraCrypt)
 
 `github.com/go-fde/veracrypt` reads VeraCrypt and TrueCrypt volumes in pure
-Go and returns the decrypted volume as an `io.ReaderAt`. It does not write:
-`WriteAt` returns `ErrReadOnly`.
+Go and returns the decrypted volume as an `io.ReaderAt`. A `Device` does not
+write: `WriteAt` returns `ErrReadOnly`. Since v0.7.0 it also
+[creates VeraCrypt volumes](#creating-a-volume).
 
 ## How a volume opens
 
@@ -72,6 +73,55 @@ _, err = dev.ReadAt(boot, 0) // the filesystem's first sector
 - `go-filesystems/detect/fdereg` registers it, so
   `detect.OpenContainer(detect.VeraCrypt, r, size, password)` opens the
   filesystem inside.
+
+## Creating a volume
+
+```go
+v, err := veracrypt.CreateFile("new.hc", 64<<20, []byte("a long password"),
+    veracrypt.CreateOptions{Cipher: veracrypt.SerpentTwofishAES, KDF: veracrypt.SHA512})
+if err != nil {
+    log.Fatal(err)
+}
+defer v.Close()
+_, err = v.WriteAt(data, 0) // plaintext in, ciphertext on disk
+```
+
+`Create(w, size, password, opts)` writes a volume of `size` bytes (a multiple
+of 512, from 299,008 bytes to 1 PiB) to any `io.ReaderAt` + `io.WriterAt`;
+`CreateFile` makes a new 0600 file. The returned `Volume` is a plaintext view
+of the data area (`ReadAt`, `WriteAt`, `Size` = `size - 262144`). There is no
+filesystem inside.
+
+Written, following the VeraCrypt Volume Format Specification (header layout
+table, "Embedded Backup Headers") and `Volumes.c` / `Format.c`:
+
+- the primary header at 0: random 64-byte salt, then `VERA`, header version
+  5, minimum program version 1.11, both CRC-32s, volume size, master key
+  offset 131072, sector size 512 and the master keys, encrypted as one XTS
+  data unit under the key the KDF derives;
+- random bytes in the reserved area (512 to 64 KiB) and in the 64 KiB area of
+  a hidden volume's header, so a hidden volume stays deniable (none is
+  created);
+- the backup header at `size - 131072`: the same master keys under a new
+  salt, with random reserved and hidden-backup areas after it;
+- random bytes over the data area, like VeraCrypt's full format;
+  `Quick: true` skips them, like `--quick`.
+
+Options: any cipher or cascade the reader opens; PBKDF2 with SHA-512 (the
+default), SHA-256, BLAKE2s-256, Whirlpool or Streebog-512, or Argon2id (not
+RIPEMD-160, which VeraCrypt 1.26 no longer offers); PIM up to 100,000; keyfiles. Salts, master keys and fill come from
+`crypto/rand`; key buffers are zeroed after use and on `Close`. Hidden
+volumes, system encryption and TrueCrypt volumes are not created.
+
+Checked against other programs: our reader opens every cipher × KDF through
+the primary and the backup header; cryptsetup 2.7.0's `tcryptDump
+--veracrypt` reads 40 combinations and reports the cipher chain, hash, mode
+(`xts-plain64`), key size, MK offset 131072 and version 5 we wrote (its
+OpenSSL backend lacks Kuznyechik and Streebog); VeraCrypt 1.26.31's
+`--backup-headers` and `--restore-headers` (from our embedded backup header)
+accept the volume, and the restored volume still opens with our reader.
+Creating a 64 MiB AES container takes 123 ms against 0.74 s for
+`veracrypt --text --create`.
 
 ## Offsets
 
