@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker and VeraCrypt (read-only), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
+        <meta name="description" content="Pure-Go full-disk encryption — a unified dispatcher over LUKS1/LUKS2, APFS FileVault 2, BitLocker (read-only) and VeraCrypt (read, and create), and a plaintext passthrough backend. No cgo, no root, interoperable with cryptsetup and diskutil.">
       
       
       
@@ -559,7 +559,7 @@
   <span class="md-ellipsis">
     
   
-    veracrypt — VeraCrypt and TrueCrypt (read-only)
+    veracrypt — VeraCrypt and TrueCrypt (read; create VeraCrypt)
   
 
     
@@ -751,14 +751,14 @@ QCOW2 virtual disk.</p>
 <td>Read-only BitLocker (Windows 7+, To Go): password, recovery password, <code>.BEK</code> startup key, clear key; AES-CBC ± Elephant and AES-XTS; equal to cryptsetup's <code>bitlkOpen</code> on Windows-made volumes.</td>
 </tr>
 <tr>
-<td><a href="components/veracrypt/"><code>veracrypt</code></a></td>
-<td>backend</td>
-<td>Read-only VeraCrypt and TrueCrypt: every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); every KDF cryptsetup's tcrypt tries (PBKDF2 with SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool or Streebog-512, Argon2id, and the SHA-256, BLAKE2s and RIPEMD-160 boot rows; not the Streebog boot row); PIM, keyfiles, hidden volumes, system encryption; all 65 XTS volumes from cryptsetup's corpus open and match (the 28 LRW/CBC ones are refused).</td>
-</tr>
-<tr>
 <td><a href="components/zed/"><code>zed</code></a></td>
 <td>archive reader</td>
 <td>Prim'X ZED! <code>.zed</code> archives for password users (writing is experimental: written AES-128 and AES-256 archives open in ZED! Free 2026.3.6 without a warning) (not a <code>Device</code>: a file archive, not a block device); MS-CFB container, AES-CBC STREAM/CTS, zlib; checked on the 2017 test vectors and on one ZED! Free 2024.4 container.</td>
+</tr>
+<tr>
+<td><a href="components/veracrypt/"><code>veracrypt</code></a></td>
+<td>backend</td>
+<td>Reads VeraCrypt and TrueCrypt, and (v0.7.0) creates VeraCrypt volumes (<code>Create</code>: any cipher, cascade and PBKDF2 or Argon2id KDF, PIM, keyfiles, primary and backup headers, random fill; accepted by cryptsetup's <code>tcryptDump</code> and by VeraCrypt's <code>--backup-headers</code> and <code>--restore-headers</code>). Reads: every XTS cipher and cascade VeraCrypt offers (AES, Camellia, Kuznyechik, Serpent, Twofish and ten cascades); every KDF cryptsetup's tcrypt tries (PBKDF2 with SHA-512, SHA-256, BLAKE2s, RIPEMD-160, Whirlpool or Streebog-512, Argon2id, and the SHA-256, BLAKE2s and RIPEMD-160 boot rows; not the Streebog boot row); PIM, keyfiles, hidden volumes, system encryption; all 65 XTS volumes from cryptsetup's corpus open and match (the 28 LRW/CBC ones are refused).</td>
 </tr>
 <tr>
 <td><a href="components/clear/"><code>clear</code></a></td>
