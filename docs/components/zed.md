@@ -1,23 +1,22 @@
 # zed — Prim'X ZED! archives (read; write is experimental)
 
-`github.com/go-fde/zed` (v0.5.0) reads Prim'X ZED! encrypted archives
+`github.com/go-fde/zed` (v0.5.1) reads Prim'X ZED! encrypted archives
 (`.zed`) in pure Go, for users who hold a password. It lists the entries of an
 archive and reads their files. It is not a block-device backend: it is a file
 archive reader, so it has no `Device` and the [`fde`](fde.md) dispatcher does
 not open it.
 
-**Writing is experimental (v0.5.0).** `zed.Create` writes new archives that
-this package reads back, and **ZED! Free 2026.3.6 opens an AES-128 archive
-written with the default full seal without any warning** (checked with
+**Writing is experimental (v0.5.1).** `zed.Create` writes new archives that
+this package reads back, and **ZED! Free 2026.3.6 opens an AES-128 or AES-256
+archive written with the default full seal without any warning** (checked with
 `cmd/zedgui`): the seal stream's global hash and the per-file values are
-computed. The options without a full seal (`SealNone`, `SealPropertyOnly`)
-give archives ZEDFREE warns about or refuses. AES-256 archives are refused by
-ZEDFREE with `[807A0103]`; a file extracted through the ZED! interface was not
-tested. The seal algorithms, found for interoperability (Directive 2009/24/EC
-art. 6), are in the
-[README](https://github.com/go-fde/zed#writing-new-archives-experimental);
-the open AES-256 question is
-[issue #21](https://github.com/go-fde/zed/issues/21).
+computed, and the seal key is as long as the archive key (a shorter one made
+ZEDFREE refuse AES-256 with `[807A0103]` before v0.5.1). The options without a
+full seal (`SealNone`, `SealPropertyOnly`) give archives ZEDFREE warns about or
+refuses. A file extracted through the ZED! interface was not tested. The seal
+algorithms, found for interoperability (Directive 2009/24/EC art. 6), are in
+the [README](https://github.com/go-fde/zed#writing-new-archives-experimental);
+history: [issue #21](https://github.com/go-fde/zed/issues/21).
 The `cmd/zedgui` tool drives ZEDFREE.app through the macOS Accessibility API to
 test an archive without a person.
 
