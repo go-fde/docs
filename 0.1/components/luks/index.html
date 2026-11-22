@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -514,6 +514,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#opening-an-untrusted-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening an untrusted image
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#create-a-new-luks1-container" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -813,6 +824,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#opening-an-untrusted-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening an untrusted image
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#create-a-new-luks1-container" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -994,8 +1016,12 @@ supported feature set.</p>
 <td>❌ (out of scope)</td>
 </tr>
 <tr>
-<td>Backup header fallback (secondary copy at <code>hdrSize/2</code>)</td>
-<td>❌ (valid devices always have a readable primary header)</td>
+<td>Header checksum (<code>csum_alg</code> over <code>hdr_size</code> bytes)</td>
+<td>✅ verified; an unknown or empty algorithm is refused</td>
+</tr>
+<tr>
+<td>Backup header (secondary copy at offset <code>hdr_size</code>)</td>
+<td>✅ used when the primary is corrupt</td>
 </tr>
 </tbody>
 </table>
@@ -1019,6 +1045,30 @@ supported feature set.</p>
 <span class="c1">// Check whether a file looks like a LUKS container.</span>
 <span class="nx">ok</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">luks</span><span class="p">.</span><span class="nx">Detect</span><span class="p">(</span><span class="s">"/path/to/disk.img"</span><span class="p">)</span>
 </code></pre></div>
+<p><code>ReadAt</code> and <code>WriteAt</code> take offsets in <code>[0, payload size)</code>. A negative or
+overflowing offset returns an error wrapping <code>ErrOffset</code>. When the header states
+a payload size, a read stops at its end with <code>io.EOF</code> and a write past it is
+refused with <code>ErrOffset</code>. After <code>Close</code>, both return <code>os.ErrClosed</code>. <code>Close</code>
+wipes the volume key from memory.</p>
+<h3 id="opening-an-untrusted-image">Opening an untrusted image</h3>
+<p>A LUKS header says how much work unlocking costs, so every key slot and digest
+is checked before any work is done for it:</p>
+<ul>
+<li>Argon2: 1 to 4 threads, at most 4 GiB, at least 8 KiB per thread; PBKDF2 and
+  Argon2 need at least one iteration or pass (zero PBKDF2 iterations is an
+  error).</li>
+<li><code>Limits</code> (<code>DefaultLimits</code>, or <code>OpenLimited</code> / <code>OpenFromLimited</code>) bound PBKDF2
+  iterations, Argon2 passes and memory.</li>
+<li>At most 32 LUKS2 key slots and 8 digests; <code>sector_size</code> is 512, 1024, 2048
+  or 4096.</li>
+<li>The total work of one <code>Open</code> is charged to a <code>go-encryptions/kdfbudget</code>
+  budget; a header asking for more is refused with <code>ErrLimit</code>
+  (<code>kdfbudget.ErrLimit</code>).</li>
+</ul>
+<p>A LUKS2 header copy is accepted only if its checksum verifies. The secondary
+copy (offset <code>hdr_size</code>) is used when the primary is damaged, the higher <code>seqid</code>
+when both verify. The checksum is unkeyed: it detects corruption, it does not
+authenticate the header.</p>
 <h3 id="create-a-new-luks1-container">Create a new LUKS1 container</h3>
 <p><code>Format</code> and <code>FormatOn</code> initialise a fresh LUKS1 header on an existing file or
 block device, derive an encryption key from the passphrase, and return an open
