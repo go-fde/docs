@@ -85,9 +85,23 @@ this way.
 
 Errors are kept apart:
 
-- `ErrLimit`: a locker asked for more key-derivation work than the `Limits` allow.
+- `ErrLimit` (the same value as `kdfbudget.ErrLimit`): a locker asked for more
+  key-derivation work than the `Limits` allow, or the keybag holds more lockers
+  than `Limits.MaxLockers` (16 by default).
 - `ErrWrongPassphrase`: lockers were tried and none opened.
 - Anything else is a structural error in the image.
+
+The total work of one unlock is bounded too. `Limits.Budget` is a
+[`kdfbudget.Budget`](https://github.com/go-encryptions/kdfbudget): every PBKDF2
+and Argon2 run is charged to it before it runs, so many lockers each within
+their own limit cannot add up to hours. Nil means a fresh `kdfbudget.Default()`
+per unlock; `kdfbudget.Unlimited()` is for an image you trust. Give each unlock
+its own `Budget`. `OpenLimited`, `OpenFromLimited` and `UnlockVolumeKey` take
+the `Limits`, and so do the keybag rewrite functions: `AddRecoveryKeyLimited`,
+`AddPassphraseLimited`, `AddArgon2idPassphraseLimited` and
+`AddInstitutionalKeyLimited`, which charge the new locker's own derivation as
+well. `OpenFromWithPrivateKey` derives no key and costs at most one RSA
+operation.
 
 Untrusted geometry is bounded:
 
