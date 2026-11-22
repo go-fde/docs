@@ -34,7 +34,8 @@ supported feature set.
 | Integrity (AEAD per-sector tags, `--integrity`) | ❌ (complex; out of scope) |
 | Hardware tokens (FIDO2, TPM, smart cards) | ❌ (out of scope for a passphrase library) |
 | Detached headers | ❌ (out of scope) |
-| Backup header fallback (secondary copy at `hdrSize/2`) | ❌ (valid devices always have a readable primary header) |
+| Header checksum (`csum_alg` over `hdr_size` bytes) | ✅ verified; an unknown or empty algorithm is refused |
+| Backup header (secondary copy at offset `hdr_size`) | ✅ used when the primary is corrupt |
 
 ## Usage
 
@@ -58,6 +59,33 @@ _, err = dev.WriteAt([]byte("hello"), 0)
 // Check whether a file looks like a LUKS container.
 ok, err := luks.Detect("/path/to/disk.img")
 ```
+
+`ReadAt` and `WriteAt` take offsets in `[0, payload size)`. A negative or
+overflowing offset returns an error wrapping `ErrOffset`. When the header states
+a payload size, a read stops at its end with `io.EOF` and a write past it is
+refused with `ErrOffset`. After `Close`, both return `os.ErrClosed`. `Close`
+wipes the volume key from memory.
+
+### Opening an untrusted image
+
+A LUKS header says how much work unlocking costs, so every key slot and digest
+is checked before any work is done for it:
+
+- Argon2: 1 to 4 threads, at most 4 GiB, at least 8 KiB per thread; PBKDF2 and
+  Argon2 need at least one iteration or pass (zero PBKDF2 iterations is an
+  error).
+- `Limits` (`DefaultLimits`, or `OpenLimited` / `OpenFromLimited`) bound PBKDF2
+  iterations, Argon2 passes and memory.
+- At most 32 LUKS2 key slots and 8 digests; `sector_size` is 512, 1024, 2048
+  or 4096.
+- The total work of one `Open` is charged to a `go-encryptions/kdfbudget`
+  budget; a header asking for more is refused with `ErrLimit`
+  (`kdfbudget.ErrLimit`).
+
+A LUKS2 header copy is accepted only if its checksum verifies. The secondary
+copy (offset `hdr_size`) is used when the primary is damaged, the higher `seqid`
+when both verify. The checksum is unkeyed: it detects corruption, it does not
+authenticate the header.
 
 ### Create a new LUKS1 container
 
