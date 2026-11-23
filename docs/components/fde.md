@@ -164,8 +164,8 @@ dev.WriteAt(myData, 0)
 | `OpenLUKSFrom(rw, passphrase, opts ...Option) (Device, error)` | LUKS-on-RW shorthand |
 | `OpenAPFS(path, passphrase, opts ...Option) (Device, error)` | APFS shorthand |
 | `OpenAPFSFrom(rw, passphrase, opts ...Option) (Device, error)` | APFS-on-RW shorthand |
-| `OpenBitLocker(path, passphrase) (Device, error)` | BitLocker shorthand (read-only) |
-| `OpenBitLockerFrom(rw, passphrase) (Device, error)` | BitLocker-on-RW shorthand; `rw` must tell its size |
+| `OpenBitLocker(path, passphrase, opts ...Option) (Device, error)` | BitLocker shorthand (read-only) |
+| `OpenBitLockerFrom(rw, passphrase, opts ...Option) (Device, error)` | BitLocker-on-RW shorthand; `rw` must tell its size |
 | `OpenVeraCrypt(path, password) (Device, error)` | VeraCrypt/TrueCrypt shorthand (read-only) |
 | `OpenVeraCryptFrom(rw, password) (Device, error)` | VeraCrypt-on-RW shorthand; `rw` must tell its size |
 | `OpenClear(path) (Device, error)` | Plaintext shorthand |
@@ -173,9 +173,10 @@ dev.WriteAt(myData, 0)
 
 ### Bounding the cost of an untrusted unlock
 
-A LUKS or APFS header says how much key-derivation work unlocking costs, so an
-untrusted image can ask for minutes of CPU or gigabytes of memory. `Open`,
-`OpenFrom` and the LUKS and APFS shorthands take a `WithBudget(b)` option
+A LUKS or APFS header says how much key-derivation work unlocking costs, and a
+BitLocker volume can list many protectors, so an untrusted image can ask for
+minutes of CPU or gigabytes of memory. `Open`, `OpenFrom` and the LUKS, APFS
+and BitLocker shorthands take a `WithBudget(b)` option
 (`b` is a `go-encryptions/kdfbudget` `*Budget`). Without it, a default budget
 applies, with Argon2 threads capped at 4. A header asking for more than the
 budget is refused with `ErrLimit` (match it with `errors.Is`; it is the same
@@ -186,9 +187,10 @@ dev, err := fde.OpenLUKS("disk.luks", pass, fde.WithBudget(myBudget))
 if errors.Is(err, kdfbudget.ErrLimit) { /* hostile or oversized header */ }
 ```
 
-`OpenBitLocker` and `OpenVeraCrypt` do not take the option yet; they keep
-their own limits. Through `Open(kind, ..., opts)` with those kinds, the option
-is ignored.
+The LUKS1 header path is charged too (every key slot tried and the master-key
+digest), as is each BitLocker key derivation (2 x 2²⁰ SHA-256 compressions).
+`OpenVeraCrypt` does not take the option yet; it keeps its own limits, and
+through `Open(VERACRYPT, ..., opts)` the option is ignored.
 
 ### Container creation
 
