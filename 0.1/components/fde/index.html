@@ -1208,11 +1208,11 @@ for <code>CLEAR</code> (no header is written).</p>
 <td>APFS-on-RW shorthand</td>
 </tr>
 <tr>
-<td><code>OpenBitLocker(path, passphrase) (Device, error)</code></td>
+<td><code>OpenBitLocker(path, passphrase, opts ...Option) (Device, error)</code></td>
 <td>BitLocker shorthand (read-only)</td>
 </tr>
 <tr>
-<td><code>OpenBitLockerFrom(rw, passphrase) (Device, error)</code></td>
+<td><code>OpenBitLockerFrom(rw, passphrase, opts ...Option) (Device, error)</code></td>
 <td>BitLocker-on-RW shorthand; <code>rw</code> must tell its size</td>
 </tr>
 <tr>
@@ -1234,9 +1234,10 @@ for <code>CLEAR</code> (no header is written).</p>
 </tbody>
 </table>
 <h3 id="bounding-the-cost-of-an-untrusted-unlock">Bounding the cost of an untrusted unlock</h3>
-<p>A LUKS or APFS header says how much key-derivation work unlocking costs, so an
-untrusted image can ask for minutes of CPU or gigabytes of memory. <code>Open</code>,
-<code>OpenFrom</code> and the LUKS and APFS shorthands take a <code>WithBudget(b)</code> option
+<p>A LUKS or APFS header says how much key-derivation work unlocking costs, and a
+BitLocker volume can list many protectors, so an untrusted image can ask for
+minutes of CPU or gigabytes of memory. <code>Open</code>, <code>OpenFrom</code> and the LUKS, APFS
+and BitLocker shorthands take a <code>WithBudget(b)</code> option
 (<code>b</code> is a <code>go-encryptions/kdfbudget</code> <code>*Budget</code>). Without it, a default budget
 applies, with Argon2 threads capped at 4. A header asking for more than the
 budget is refused with <code>ErrLimit</code> (match it with <code>errors.Is</code>; it is the same
@@ -1244,9 +1245,10 @@ value as <code>kdfbudget.ErrLimit</code>).</p>
 <div class="highlight"><pre><span></span><code><span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">OpenLUKS</span><span class="p">(</span><span class="s">"disk.luks"</span><span class="p">,</span><span class="w"> </span><span class="nx">pass</span><span class="p">,</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">WithBudget</span><span class="p">(</span><span class="nx">myBudget</span><span class="p">))</span>
 <span class="k">if</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nx">Is</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">kdfbudget</span><span class="p">.</span><span class="nx">ErrLimit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* hostile or oversized header */</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
-<p><code>OpenBitLocker</code> and <code>OpenVeraCrypt</code> do not take the option yet; they keep
-their own limits. Through <code>Open(kind, ..., opts)</code> with those kinds, the option
-is ignored.</p>
+<p>The LUKS1 header path is charged too (every key slot tried and the master-key
+digest), as is each BitLocker key derivation (2 x 2²⁰ SHA-256 compressions).
+<code>OpenVeraCrypt</code> does not take the option yet; it keeps its own limits, and
+through <code>Open(VERACRYPT, ..., opts)</code> the option is ignored.</p>
 <h3 id="container-creation">Container creation</h3>
 <table>
 <thead>

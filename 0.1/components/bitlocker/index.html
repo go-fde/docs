@@ -928,7 +928,10 @@ instead of committing it.</p>
   block.</li>
 <li>The key derivation is 2²⁰ rounds of SHA-256 whatever the image says.
   <code>Limits.MaxKeyDerivations</code> (16 by default) bounds how many protectors may
-  run it; past that the open fails with <code>ErrLimit</code>.</li>
+  run it; past that the open fails with <code>ErrLimit</code>. <code>Limits.Budget</code> (a
+  <code>go-encryptions/kdfbudget</code> budget, a fresh default per <code>Open</code> when nil)
+  bounds the total: each derivation is charged 2 × 2²⁰ SHA-256 compressions
+  before it runs, and <code>ErrLimit</code> is <code>kdfbudget.ErrLimit</code>.</li>
 <li>The parsers are fuzzed.</li>
 </ul>
 <h2 id="references">References</h2>

@@ -1063,7 +1063,8 @@ is checked before any work is done for it:</p>
   or 4096.</li>
 <li>The total work of one <code>Open</code> is charged to a <code>go-encryptions/kdfbudget</code>
   budget; a header asking for more is refused with <code>ErrLimit</code>
-  (<code>kdfbudget.ErrLimit</code>).</li>
+  (<code>kdfbudget.ErrLimit</code>). Since v0.5.1 this covers the LUKS1 header too: each
+  key slot tried and the master-key digest are charged before they run.</li>
 </ul>
 <p>A LUKS2 header copy is accepted only if its checksum verifies. The secondary
 copy (offset <code>hdr_size</code>) is used when the primary is damaged, the higher <code>seqid</code>
