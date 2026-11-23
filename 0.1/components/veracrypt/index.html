@@ -1062,7 +1062,16 @@ instead of committing it.</p>
   attacker chooses it. <code>Limits</code> bounds the number of derivations, the PIM
   (2000 by default), the PBKDF2 iterations and the Argon2id memory (1 GiB by
   default). An open that would exceed them is refused with <code>ErrLimit</code> before
-  any derivation.</li>
+  any derivation. However high <code>MaxPIM</code> is raised, a PIM above VeraCrypt's own
+  maxima (2147468, or 65535 for system encryption) is refused.</li>
+<li>Since v0.8.0, <code>Limits.Budget</code> (a <code>go-encryptions/kdfbudget</code> budget; a fresh
+  <code>kdfbudget.Default()</code> per open when nil) bounds the total work of one open:
+  every KDF tried, and both headers of a hidden-volume open, are charged to it
+  before they run. It is what bounds Argon2id, whose passes <code>MaxIterations</code>
+  does not count: a PIM of 2000 is 1982 passes over 1 GiB, four times the
+  default budget. A KDF the limits or the budget refused is skipped; if
+  nothing else opens the volume the error is <code>ErrLimit</code>, never
+  <code>ErrWrongSecret</code>. <code>ErrLimit</code> is <code>kdfbudget.ErrLimit</code>.</li>
 <li>Once decrypted, the header must pass both CRC-32s. Its data area must lie
   inside the device and be sector-aligned; a system data area must not
   overlap the header at 31744.</li>
