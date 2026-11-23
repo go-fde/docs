@@ -105,7 +105,10 @@ instead of committing it.
   block.
 - The key derivation is 2²⁰ rounds of SHA-256 whatever the image says.
   `Limits.MaxKeyDerivations` (16 by default) bounds how many protectors may
-  run it; past that the open fails with `ErrLimit`.
+  run it; past that the open fails with `ErrLimit`. `Limits.Budget` (a
+  `go-encryptions/kdfbudget` budget, a fresh default per `Open` when nil)
+  bounds the total: each derivation is charged 2 × 2²⁰ SHA-256 compressions
+  before it runs, and `ErrLimit` is `kdfbudget.ErrLimit`.
 - The parsers are fuzzed.
 
 ## References
