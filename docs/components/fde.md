@@ -175,8 +175,8 @@ dev.WriteAt(myData, 0)
 
 A LUKS or APFS header says how much key-derivation work unlocking costs, and a
 BitLocker volume can list many protectors, so an untrusted image can ask for
-minutes of CPU or gigabytes of memory. `Open`, `OpenFrom` and the LUKS, APFS
-and BitLocker shorthands take a `WithBudget(b)` option
+minutes of CPU or gigabytes of memory. `Open`, `OpenFrom` and the LUKS, APFS,
+BitLocker and VeraCrypt shorthands take a `WithBudget(b)` option
 (`b` is a `go-encryptions/kdfbudget` `*Budget`). Without it, a default budget
 applies, with Argon2 threads capped at 4. A header asking for more than the
 budget is refused with `ErrLimit` (match it with `errors.Is`; it is the same
@@ -189,8 +189,10 @@ if errors.Is(err, kdfbudget.ErrLimit) { /* hostile or oversized header */ }
 
 The LUKS1 header path is charged too (every key slot tried and the master-key
 digest), as is each BitLocker key derivation (2 x 2²⁰ SHA-256 compressions).
-`OpenVeraCrypt` does not take the option yet; it keeps its own limits, and
-through `Open(VERACRYPT, ..., opts)` the option is ignored.
+`OpenVeraCrypt` and `OpenVeraCryptFrom` take the option too (fde v0.6.0): a
+VeraCrypt trial charges every KDF it tries, about 6 x 10⁶ units for a normal
+volume with PIM 0, and a KDF the budget refuses is skipped; if none opens the
+volume the error is `ErrLimit`, never a wrong password.
 
 ### Container creation
 
