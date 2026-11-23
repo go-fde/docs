@@ -563,6 +563,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#bounding-the-cost-of-an-untrusted-unlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bounding the cost of an untrusted unlock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#container-creation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -939,6 +950,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#bounding-the-cost-of-an-untrusted-unlock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bounding the cost of an untrusted unlock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#container-creation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1162,27 +1184,27 @@ for <code>CLEAR</code> (no header is written).</p>
 <td>Detect format from an <code>io.ReaderAt</code></td>
 </tr>
 <tr>
-<td><code>Open(kind, path, passphrase) (Device, error)</code></td>
+<td><code>Open(kind, path, passphrase, opts ...Option) (Device, error)</code></td>
 <td>Open device by path; <code>Auto</code> auto-detects</td>
 </tr>
 <tr>
-<td><code>OpenFrom(kind, rw, passphrase) (Device, error)</code></td>
+<td><code>OpenFrom(kind, rw, passphrase, opts ...Option) (Device, error)</code></td>
 <td>Open device from an <code>RW</code>; <code>Auto</code> auto-detects</td>
 </tr>
 <tr>
-<td><code>OpenLUKS(path, passphrase) (Device, error)</code></td>
+<td><code>OpenLUKS(path, passphrase, opts ...Option) (Device, error)</code></td>
 <td>LUKS shorthand</td>
 </tr>
 <tr>
-<td><code>OpenLUKSFrom(rw, passphrase) (Device, error)</code></td>
+<td><code>OpenLUKSFrom(rw, passphrase, opts ...Option) (Device, error)</code></td>
 <td>LUKS-on-RW shorthand</td>
 </tr>
 <tr>
-<td><code>OpenAPFS(path, passphrase) (Device, error)</code></td>
+<td><code>OpenAPFS(path, passphrase, opts ...Option) (Device, error)</code></td>
 <td>APFS shorthand</td>
 </tr>
 <tr>
-<td><code>OpenAPFSFrom(rw, passphrase) (Device, error)</code></td>
+<td><code>OpenAPFSFrom(rw, passphrase, opts ...Option) (Device, error)</code></td>
 <td>APFS-on-RW shorthand</td>
 </tr>
 <tr>
@@ -1211,6 +1233,20 @@ for <code>CLEAR</code> (no header is written).</p>
 </tr>
 </tbody>
 </table>
+<h3 id="bounding-the-cost-of-an-untrusted-unlock">Bounding the cost of an untrusted unlock</h3>
+<p>A LUKS or APFS header says how much key-derivation work unlocking costs, so an
+untrusted image can ask for minutes of CPU or gigabytes of memory. <code>Open</code>,
+<code>OpenFrom</code> and the LUKS and APFS shorthands take a <code>WithBudget(b)</code> option
+(<code>b</code> is a <code>go-encryptions/kdfbudget</code> <code>*Budget</code>). Without it, a default budget
+applies, with Argon2 threads capped at 4. A header asking for more than the
+budget is refused with <code>ErrLimit</code> (match it with <code>errors.Is</code>; it is the same
+value as <code>kdfbudget.ErrLimit</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="nx">dev</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">OpenLUKS</span><span class="p">(</span><span class="s">"disk.luks"</span><span class="p">,</span><span class="w"> </span><span class="nx">pass</span><span class="p">,</span><span class="w"> </span><span class="nx">fde</span><span class="p">.</span><span class="nx">WithBudget</span><span class="p">(</span><span class="nx">myBudget</span><span class="p">))</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nx">Is</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">kdfbudget</span><span class="p">.</span><span class="nx">ErrLimit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* hostile or oversized header */</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><code>OpenBitLocker</code> and <code>OpenVeraCrypt</code> do not take the option yet; they keep
+their own limits. Through <code>Open(kind, ..., opts)</code> with those kinds, the option
+is ignored.</p>
 <h3 id="container-creation">Container creation</h3>
 <table>
 <thead>
